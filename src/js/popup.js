@@ -86,19 +86,7 @@ import Website from "./website";
         return;
       } 
  
-      try {
-        const host = await app.getLocation();
-
-        if (!host) {
-          alert("Sorry pal! you are not on a website.");
-          return;
-        }
-      } 
-      catch (error) {
-        alert("Sorry pal! we can't get the current tab url.");
-        return;
-      }
-     
+      const host = await app.getLocation();
       const website = new Website(host, html); 
 
       const header = $("._header");

@@ -40,7 +40,12 @@ class App {
     return tab.url;
   }
 
-
+  // is blank tab or not
+  async isBlankTab() {
+    const html = await this.getHTML();
+    return html === "";
+  }
+  
 }
 
 // export
