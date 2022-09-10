@@ -1,0 +1,27 @@
+{
+  "name": "iswp",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "popup:sass": "npx sass ./src/scss/popup.scss ./src/css/popup.css --watch",
+    "popup:tailwind": "npx tailwindcss -i ./src/css/popup.css -c ./tailwind.popup.js -o ./build/css/popup.min.css --watch --minify",
+    "options:sass": "npx sass ./src/scss/options.scss ./src/css/options.css --watch",
+    "options:tailwind": "npx tailwindcss -i ./src/css/options.css -c ./tailwind.options.js -o ./build/css/options.min.css --watch --minify",
+    "popup:webpack": "npx webpack --config ./webpack.popup.js --watch",
+    "options:webpack": "npx webpack --config ./webpack.options.js --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.7",
+    "alpinejs": "^3.10.3",
+    "axios": "^0.27.2",
+    "babel-loader": "^8.2.5",
+    "sass": "^1.54.9",
+    "tailwindcss": "^3.1.8",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0"
+  }
+}

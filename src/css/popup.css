@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@font-face {
+  font-family: "OpenSans";
+  src: url("../fonts/OpenSans-Regular.ttf");
+}
+@font-face {
+  font-family: "OpenSans";
+  src: url("../fonts/OpenSans-Bold.ttf");
+  font-weight: bold;
+}
+html,
+body {
+  font-family: "OpenSans";
+  font-size: 14px;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  outline: 0;
+}
+
+.isWP {
+  font-size: 14px;
+  @apply w-80 bg-slate-800 text-slate-200;
+}
+.isWP p,
+.isWP h1,
+.isWP h2,
+.isWP h3,
+.isWP h4,
+.isWP h5,
+.isWP h6,
+.isWP a,
+.isWP li,
+.isWP span,
+.isWP div,
+.isWP input,
+.isWP textarea,
+.isWP button {
+  font-family: "OpenSans" !important;
+}
+.isWP ._header {
+  @apply text-center rounded-sm px-3 py-3 text-base text-white font-medium flex items-center justify-center gap-3 text-center;
+}
+.isWP ._header.success {
+  @apply bg-green-600;
+}
+.isWP ._header.error {
+  @apply bg-red-500;
+}
+.isWP ._header.warning {
+  @apply bg-yellow-500;
+}
+.isWP ._header.info {
+  @apply bg-blue-500;
+}
+.isWP ._header.check {
+  @apply cursor-pointer hover:opacity-90;
+}
+.isWP ._header .icon {
+  @apply w-5 h-5;
+}
+.isWP ._spinner {
+  @apply block rounded-full border-2 border-white border-y-blue-500 animate-spin;
+}
+.isWP ._tabs {
+  @apply flex items-center justify-center bg-slate-700;
+}
+.isWP ._tabs a {
+  @apply w-full py-2 px-2 text-center cursor-pointer hover:text-blue-200 hover:bg-slate-600 capitalize transition-colors duration-100 ease-in-out;
+}
+.isWP ._tabs a.active {
+  @apply text-blue-200 bg-blue-500 hover:text-blue-200 hover:bg-blue-500;
+}
+.isWP ._footer {
+  @apply text-center py-2 text-xs text-slate-500;
+}
+.isWP ._footer * {
+  @apply text-xs;
+}
+.isWP ._footer a {
+  @apply text-slate-500 hover:text-blue-200 transition duration-75;
+}
+
+/*# sourceMappingURL=popup.css.map */
