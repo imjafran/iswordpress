@@ -1,8 +1,8 @@
+import Theme from "./theme";
+import Plugin from "./plugin";
+import { $, $$, $Data } from "./helpers";
 
-import Theme from "./theme"; 
-import {$, $$, $Data} from "./helpers";
-
-class Website { 
+class Website {
   // HTML content of the host
   HTML = "";
 
@@ -17,8 +17,8 @@ class Website {
 
   // constructor
   constructor(HTML = "") {
-    this.HTML = HTML; 
-  } 
+    this.HTML = HTML;
+  }
 
   // is wordpress
   get isWordPress() {
@@ -44,17 +44,39 @@ class Website {
     return false;
   }
 
+  // get plugin names
+  getPluginNames() {
+    let plugins = this.HTML.match(/wp-content\/plugins\/(.*?)\//g);
+    if (plugins && plugins.length > 0) {
+      plugins = plugins.map((plugin) => {
+        let name = plugin.replace("wp-content/plugins/", "");
+        name = name.replace("/", "");
+        return name;
+      });
+
+      // unique
+      plugins = [...new Set(plugins)];
+
+      return plugins;
+    }
+    return [];
+  } 
 
   // load plugins
   async getPlugins() {
-   return [];
+    const plugins = this.getPluginNames();
+    return Promise.all(
+      plugins.map(async (plugin) => {
+        const pluginObj = new Plugin(plugin);
+        await pluginObj.init();
+        return pluginObj;
+      })
+    );
+
   }
 
-  // load server
-  async getServer() {
-    return {};
-  }
-
+  // load server information
+  async getServer() {}
 }
 
 // export default

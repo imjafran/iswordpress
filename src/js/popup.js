@@ -3,48 +3,59 @@ import Website from "./website";
 import { $, $$, $Data } from "./helpers";
 
 (function () {
-  const isWordPress = {
+  window._isWP = {};
+
+  class isWP {
+    state = {
+      themeLoaded: false,
+      pluginsLoaded: false,
+      serverLoaded: false,
+    };
+
     // init
     async init() {
       this.bindEvents();
       await this.initApp();
-    },
+    }
 
     // bindEvents
     bindEvents() {
       $$("#_tabs > [data-tab]").forEach((tab) => {
-        tab.addEventListener("click", this.handleTabClick);
+        tab.addEventListener("click", this.handleTabClick.bind(this));
       });
-    },
+    }
 
     // handleTabClick
-    handleTabClick(e) {
-      // index of tabs
+    handleTabClick = async (e) => {
       const tabId = e.target.getAttribute("data-tab") || "theme";
 
-      const tab = $(`#_tabs > [data-tab="${tabId}"]`);
-      const content = $(`#_contents > [data-tab="${tabId}"]`);
-
-      // remove active class
       $$("#_tabs > [data-tab]").forEach((tab) => {
         tab.classList.remove("active");
       });
 
-      $$("#_contents > [data-tab]").forEach((content) => {
+      e.target.classList.add("active");
+
+      $$("#_contents > [data-content]").forEach((content) => {
         content.style.display = "none";
       });
 
-      // add active class
-      tab.classList.add("active");
-      content.style.display = "block";
-    },
+      $(`#_contents > [data-content="${tabId}"]`).style.display = "block";
+
+      if (tabId === "plugins" && !this.state.pluginsLoaded) {
+        await this.loadPlugins();
+      }
+
+      if (tabId === "server" && !this.state.serverLoaded) {
+        await this.loadServer();
+      }
+    };
 
     // initApp
     async initApp() {
       const app = new App();
 
       const host = await app.getHost();
-      window.HOST = host;
+      window._isWP.host = host;
 
       const header = $("._header");
       header.classList.remove("info");
@@ -56,8 +67,11 @@ import { $, $$, $Data } from "./helpers";
       }
 
       const html = await app.getHtml();
+      window._isWP.html = html;
 
       const website = new Website(html);
+
+      window._isWP.website = website;
 
       if (website.isWordPress) {
         header.innerHTML = "WordPress found!";
@@ -66,28 +80,36 @@ import { $, $$, $Data } from "./helpers";
 
         $("._tab-container").style.display = "block";
 
+        // init plugin count
+
+        const plugin_count = website.getPluginNames().length;
+        const span = document.createElement("span");
+        span.innerHTML = "(" + plugin_count + ")";
+
+        $("#_tabs [data-tab='plugins']").appendChild(span);
+
         await this.initTheme(website);
       } else {
         header.innerHTML = "WordPress not found!";
         header.classList.add("error");
       }
-    },
+    }
 
     // initTheme
     async initTheme(website) {
+      $("#_contents").style.display = "block";
+
       const theme = await website.getTheme();
 
-      // console.log(theme);
+      this.state.themeLoaded = true;
 
-      // return;
-
-      // alert(w.themeScreenshotURI);
       $Data("screenshot").src = theme.screenshot;
 
       const format = (name, value) => `<div class="_tr">
       <label>${name}:</label>
       <div>${value}</div>
-    </div>`;
+    </div>
+    `;
 
       let themeData = theme.getData();
 
@@ -96,17 +118,34 @@ import { $, $$, $Data } from "./helpers";
       for (const [key, value] of Object.entries(themeData).reverse()) {
         themeHTML += format(key, value);
       }
- 
-      console.log($Data("theme_data"));
+
       $Data("theme_data").innerHTML = themeHTML;
 
-      $("#_contents").style.display = "block";
-      $("#_content_loader").style.display = "none";
-    },
-  };
+      $Data("theme_loader").style.display = "none";
+    }
+
+    // loadPlugins
+    async loadPlugins() {
+      const website = window._isWP.website;
+
+      const plugins = await website.getPlugins();
+
+      plugins.forEach((plugin) => {
+        console.log(plugin.name);
+      });
+
+      this.state.pluginsLoaded = true;
+    }
+
+    // loadServer
+    async loadServer() {
+      this.state.serverLoaded = true;
+    }
+  }
 
   // init
-  document.addEventListener("DOMContentLoaded", function () {
-    isWordPress.init();
+  document.addEventListener("DOMContentLoaded", async () => {
+    const app = new isWP();
+    await app.init();
   });
 })();

@@ -28,14 +28,12 @@ class App {
   // get location window url from current tab 
   async getHost() {
     const tab = await this.getCurrentTab();
-    return tab.url;
+    // host name 
+    let host = new URL(tab.url).hostname; 
+    host =  "https://" + host + "/"; 
+    return host;
   }
 
-  // is valid url
-  async isValidURL() {
-    const url = await this.getHost();
-    return url.includes("http");
-  }
 
   // is empty url
   async isEmptyURL() {
@@ -47,6 +45,12 @@ class App {
   async isInternalURL() {
     const url = await this.getHost();
     return url.includes("chrome");
+  }
+
+
+  // is valid url
+  async isValidURL() {
+    return !(await this.isEmptyURL()) && !(await this.isInternalURL());
   }
   
 }

@@ -6,10 +6,11 @@ export const REST = file => {
 };
 
 export const HOST = (param = '') => {
-  return window.HOST + param;
+  return window._isWP.host + param;
 }
 
 export const $ = document.querySelector.bind(document);
 export const $$ = document.querySelectorAll.bind(document);
-export const $Data = id => document.querySelector.bind("[data-id='" + id + "']");
-export const $DataAll = id => document.querySelectorAll.bind("[data-id='" + id + "']");
+export const $Data = id => $(`[data-id="${id}"]`);
+export const $DataAll = id => $$(`[data-id="${id}"]`);
+ 
