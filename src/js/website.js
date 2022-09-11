@@ -1,9 +1,8 @@
-import axios from "axios";
+
+import Theme from "./theme"; 
+import {$, $$, $Data} from "./helpers";
 
 class Website { 
-
-  host = '';
-
   // HTML content of the host
   HTML = "";
 
@@ -17,132 +16,45 @@ class Website {
   plugins = [];
 
   // constructor
-  constructor(host = '', HTML = "") { 
-
+  constructor(HTML = "") {
     this.HTML = HTML; 
-    this.host = host;
-  }
+  } 
 
-  // init
-  async init() { 
-    await this.loadThemeInformation();
-    await this.loadThemeReadme();
-  }
-
-   // is wordpress
-   get isWP() {
+  // is wordpress
+  get isWordPress() {
     return this.HTML.includes("wp-content/themes");
   }
 
-
-  // url
-  url(link = null) {
-    if (link) {
-      return this.host + "/" + link;
+  get themeId() {
+    const theme = this.HTML.match(/wp-content\/themes\/(.*?)\//);
+    if (theme && theme.length > 0) {
+      return theme[1];
     }
-    return this.host;
+
+    return false;
   }
 
-  // axios home
-  get Rest() {
-    return axios.create({
-      baseURL: "https://test.jafran.me/iswp.php",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
-  }
- 
- 
-  get themeName() {
-    if (this.isWP) {
-      const theme = this.HTML.match(/wp-content\/themes\/(.*?)\//);
-      if (theme && theme.length > 0) {
-        return theme[1];
-      }
+  // get theme
+  async getTheme() {
+    if (this.themeId) {
+      const theme = new Theme(this.themeId);
+      await theme.init();
+      return theme;
     }
     return false;
   }
 
-  // theme style uri
-  get themeStyleURI() {
-    if (this.isWP) {
-      return this.url("wp-content/themes/" + this.themeName + "/style.css");
-    }
-    return false;
+
+  // load plugins
+  async getPlugins() {
+   return [];
   }
 
-  // theme screenshot uri
-  get themeScreenshotURI() {
-    if (this.isWP) {
-      return this.url(
-        "wp-content/themes/" + this.themeName + "/screenshot.png"
-      );
-    }
-    return false;
+  // load server
+  async getServer() {
+    return {};
   }
 
-  parseThemeInformation(data) {
-    const searchStrings = {
-      name: "Theme Name",
-      theme_uri: "Theme URI",
-      description: "Description",
-      author: "Author",
-      author_uri: "Author URI",
-      version: "Version",
-      license: "License",
-      license_uri: "License URI",
-      tags: "Tags",
-      text_domain: "Text Domain",
-      domain_path: "Domain Path",
-      requires_at_least: "Requires at least",
-      requires_php: "Requires PHP",
-      template: "Template",
-    };
-
-    const theme = {};
-
-    for (const key in searchStrings) {
-      if (searchStrings.hasOwnProperty(key)) {
-        const searchString = searchStrings[key];
-        // match case insensitive
-        const match = data.match(new RegExp(searchString + ":\\s*(.*)", "i"));
-        if (match && match.length > 0) {
-          theme[key] = match[1];
-        }
-      }
-    }
-
-    return theme;
-  }
-
-  // loadThemeInformation
-  async loadThemeInformation() {
-    const response = await this.Rest.get("?host=" + this.themeStyleURI);
-    const data = response.data;
-
-    if (data && data.length > 0) {
-      // this.theme = data;
-      // parse theme information from data
-      this.theme = this.parseThemeInformation(data);
-    }
-  }
-
-  // load theme readme.txt
-  async loadThemeReadme() {
-    const response = await this.Rest.get(
-      "?host=" + this.url("wp-content/themes/" + this.themeName + "/readme.txt")
-    );
-    const data = response.data;
-
-    if (data && data.length > 0) {
-      const readme = this.parseThemeInformation(data);
-      // merge with theme
-      this.theme = { ...this.theme, ...readme };
-    }
-    return false;
-  }
 }
 
 // export default

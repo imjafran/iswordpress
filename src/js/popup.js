@@ -1,47 +1,13 @@
-// // Initialize butotn with users's prefered color
-// let changeColor = document.getElementById("changeColor");
-
-// chrome.storage.sync.get("color", ({ color }) => {
-//   changeColor.style.backgroundColor = color;
-// });
-
-// // When the button is clicked, inject setPageBackgroundColor into current page
-// changeColor.addEventListener("click", async () => {
-//   let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-//   chrome.scripting.executeScript({
-//     target: { tabId: tab.id },
-//     function: setPageBackgroundColor,
-//   });
-// });
-
-// // The body of this function will be execuetd as a content script inside the
-// // current page
-// function setPageBackgroundColor() {
-//   chrome.storage.sync.get("color", ({ color }) => {
-//     document.body.style.backgroundColor = color;
-//   });
-// }
-
 import App from "./app";
 import Website from "./website";
+import { $, $$, $Data } from "./helpers";
 
 (function () {
-  const $ = document.querySelector.bind(document);
-  const $$ = document.querySelectorAll.bind(document);
-
-  const isWP = {
-    state: {
-      isWP: true,
-      tab: "theme",
-    },
-
-    app: null,
-
+  const isWordPress = {
     // init
-    init() {
+    async init() {
       this.bindEvents();
-      this.initApp();
+      await this.initApp();
     },
 
     // bindEvents
@@ -77,43 +43,70 @@ import Website from "./website";
     async initApp() {
       const app = new App();
 
-      const html = await app.getHTML();
-
-      if (!app.isOnline) {
-        alert(
-          "Sorry pal! you are offline. Please check your internet connection."
-        );
-        return;
-      } 
- 
-      const host = await app.getLocation();
-      const website = new Website(host, html); 
+      const host = await app.getHost();
+      window.HOST = host;
 
       const header = $("._header");
       header.classList.remove("info");
 
-      if (website.isWP) {
-        header.innerHTML = "Yes! WordPress!";
+      if (!(await app.isValidURL())) {
+        header.classList.add("error");
+        header.innerHTML = "Invalid Tab!";
+        return;
+      }
+
+      const html = await app.getHtml();
+
+      const website = new Website(html);
+
+      if (website.isWordPress) {
+        header.innerHTML = "WordPress found!";
         header.classList.remove("info");
         header.classList.add("success");
 
-        await website.init();
+        $("._tab-container").style.display = "block";
+
+        await this.initTheme(website);
       } else {
-        header.innerHTML = "Nope, It's not WordPress";
+        header.innerHTML = "WordPress not found!";
         header.classList.add("error");
       }
-
-      this.formatTheme(website);
     },
 
-    // formatTheme
-    formatTheme(w) {
-      console.log(w.theme);
+    // initTheme
+    async initTheme(website) {
+      const theme = await website.getTheme();
+
+      // console.log(theme);
+
+      // return;
+
+      // alert(w.themeScreenshotURI);
+      $Data("screenshot").src = theme.screenshot;
+
+      const format = (name, value) => `<div class="_tr">
+      <label>${name}:</label>
+      <div>${value}</div>
+    </div>`;
+
+      let themeData = theme.getData();
+
+      let themeHTML = "";
+
+      for (const [key, value] of Object.entries(themeData).reverse()) {
+        themeHTML += format(key, value);
+      }
+ 
+      console.log($Data("theme_data"));
+      $Data("theme_data").innerHTML = themeHTML;
+
+      $("#_contents").style.display = "block";
+      $("#_content_loader").style.display = "none";
     },
   };
 
   // init
   document.addEventListener("DOMContentLoaded", function () {
-    isWP.init();
+    isWordPress.init();
   });
 })();

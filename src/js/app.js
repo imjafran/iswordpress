@@ -1,14 +1,5 @@
 class App { 
 
-  HTML = "";
-
-  // constructor
-  constructor(HTML) {
-    this.HTML = HTML;
-  }
-
-  // methods
-
   // is online
   get isOnline() {
     return navigator.onLine;
@@ -21,7 +12,7 @@ class App {
   }
 
   // current tab html content
-  async getHTML() {
+  async getHtml() {
     const tab = await this.getCurrentTab();
 
     const html = await chrome.scripting.executeScript({
@@ -35,15 +26,27 @@ class App {
   }
 
   // get location window url from current tab 
-  async getLocation() {
+  async getHost() {
     const tab = await this.getCurrentTab();
     return tab.url;
   }
 
-  // is blank tab or not
-  async isBlankTab() {
-    const html = await this.getHTML();
-    return html === "";
+  // is valid url
+  async isValidURL() {
+    const url = await this.getHost();
+    return url.includes("http");
+  }
+
+  // is empty url
+  async isEmptyURL() {
+    const url = await this.getHost();
+    return url === "";
+  }
+
+  // is internal url
+  async isInternalURL() {
+    const url = await this.getHost();
+    return url.includes("chrome");
   }
   
 }
