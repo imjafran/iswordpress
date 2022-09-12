@@ -4,12 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "popup:sass": "npx sass ./src/scss/popup.scss ./src/css/popup.css --watch",
-    "popup:tailwind": "npx tailwindcss -i ./src/css/popup.css -c ./tailwind.popup.js -o ./build/css/popup.min.css --watch --minify",
-    "options:sass": "npx sass ./src/scss/options.scss ./src/css/options.css --watch",
-    "options:tailwind": "npx tailwindcss -i ./src/css/options.css -c ./tailwind.options.js -o ./build/css/options.min.css --watch --minify",
-    "popup:webpack": "npx webpack --config ./webpack.popup.js --watch",
-    "options:webpack": "npx webpack --config ./webpack.options.js --watch"
+    "sass": "npx sass ./src/scss/app.scss ./src/css/app.css --watch",
+    "tailwind": "npx tailwindcss -i ./src/css/app.css -c ./tailwind.config.js -o ./build/css/app.min.css --watch --minify",
+    "webpack": "npx webpack --watch"
   },
   "keywords": [],
   "author": "",
@@ -17,12 +14,13 @@
   "devDependencies": {
     "@babel/core": "^7.19.0",
     "@tailwindcss/typography": "^0.5.7",
-    "alpinejs": "^3.10.3",
     "axios": "^0.27.2",
     "babel-loader": "^8.2.5",
     "sass": "^1.54.9",
     "tailwind-scrollbar": "^2.0.1",
     "tailwindcss": "^3.1.8",
+    "vue": "^3.2.36",
+    "vue-loader": "^17.0.0",
     "webpack": "^5.74.0",
     "webpack-cli": "^4.10.0"
   }

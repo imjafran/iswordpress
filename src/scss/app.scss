@@ -25,7 +25,7 @@ body {
 }
 
 .isWP {
-  @apply w-72 bg-slate-700 text-slate-200 max-h-96 overflow-y-auto scrollbar scrollbar-thin scrollbar-thumb-transparent hover:scrollbar-thumb-slate-500 scrollbar-track-transparent transition duration-75;
+  @apply w-72 bg-slate-700 text-slate-200 max-h-96 overflow-y-auto scrollbar scrollbar-thin scrollbar-thumb-transparent hover:scrollbar-thumb-slate-500 scrollbar-track-transparent transition duration-75 relative;
 
   &.full {
     @apply max-h-full overflow-y-auto w-96 scrollbar scrollbar-thin scrollbar-thumb-transparent hover:scrollbar-thumb-slate-500 scrollbar-track-transparent transition duration-75;
@@ -54,7 +54,7 @@ body {
   }
 
   ._header {
-    @apply text-center tracking-wide rounded-md px-3 py-3 text-base text-white font-medium flex items-center justify-center gap-3 text-center;
+    @apply sticky top-0  bg-slate-600 tracking-wide rounded-md px-3 py-3 text-base text-white font-medium flex items-center justify-center gap-3 text-center;
 
     font-family: "OpenSans";
 
@@ -67,11 +67,11 @@ body {
     }
 
     &.warning {
-      @apply bg-yellow-500;
+      @apply bg-yellow-600;
     }
 
     &.info {
-      @apply bg-blue-500;
+      @apply bg-blue-600 ;
     }
 
     &.check {
@@ -83,14 +83,14 @@ body {
     }
   }
   ._spinner {
-    @apply block rounded-full border-2 border-white border-y-blue-500 animate-spin;
+    @apply block rounded-full border-2 border-white border-y-blue-400 animate-spin;
   }
 
   ._tabs {
     @apply flex items-center justify-center bg-slate-600;
 
     & > * {
-      @apply w-full py-2 px-2 text-center cursor-pointer text-white hover:bg-slate-500 capitalize transition-colors duration-100 ease-in-out flex items-center gap-2 justify-center text-center;
+      @apply w-full py-2 px-2 cursor-pointer text-white hover:bg-slate-500 capitalize transition-colors duration-100 ease-in-out flex items-center gap-2 justify-center text-center;
 
       span {
         @apply text-base text-yellow-200 block h-full px-0.5 pointer-events-none;
