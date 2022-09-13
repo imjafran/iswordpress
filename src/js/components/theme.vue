@@ -198,7 +198,7 @@ export default {
 
       const response = await fetch(
         `${host}/wp-content/themes/${this.slug}/style.css`
-      );
+      , constants.fetchOptions);
 
       if (response.ok) {
         const data = await response.text();
@@ -218,7 +218,7 @@ export default {
 
       const response = await fetch(
         `${host}/wp-content/themes/${this.slug}/readme.txt`
-      );
+      , constants.fetchOptions);
 
       if (response.ok) {
         const data = await response.text();
@@ -235,7 +235,7 @@ export default {
 
       const response = await fetch(
         `${host}/wp-content/themes/${this.slug}/screenshot.png`
-      );
+      , constants.fetchOptions);
 
       if (response.ok) {
         this.data.screenshot_uri = `${host}/wp-content/themes/${this.slug}/screenshot.png`;

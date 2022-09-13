@@ -29,11 +29,15 @@
       >
         <span class="font-medium text-base w-full" v-html="short_name"></span>
         <div class="w-20 text-right">
-            <span class="px-2 text-xs py-1 rounded-sm text-right" :class="{
-                'text-red-500' : accuracy < 50,
-                'text-yellow-500' : accuracy >= 50 && accuracy < 75,
-                'b text-green-500' : accuracy >= 75
-            }">{{accuracy}}%</span>
+          <span
+            class="px-2 text-xs py-1 rounded-sm text-right"
+            :class="{
+              'text-red-500': accuracy < 50,
+              'text-yellow-500': accuracy >= 50 && accuracy < 75,
+              'b text-green-500': accuracy >= 75,
+            }"
+            >{{ accuracy }}%</span
+          >
         </div>
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -59,14 +63,21 @@
         </div>
 
         <div>
-            <span class="text-slate-500">Accuracy </span> <span class="text-sm rounded-sm" :class="{
-                'text-red-500' : accuracy < 50,
-                'text-yellow-500' : accuracy >= 50 && accuracy < 75,
-                'b text-green-500' : accuracy >= 75
-            }">{{accuracy}}%</span>
-            
+          <span class="text-slate-500">Accuracy </span>
+          <span
+            class="text-sm rounded-sm"
+            :class="{
+              'text-red-500': accuracy < 50,
+              'text-yellow-500': accuracy >= 50 && accuracy < 75,
+              'b text-green-500': accuracy >= 75,
+            }"
+            >{{ accuracy }}%</span
+          >
         </div>
-        <div v-if="listed === true" class="flex items-center justify-center gap-3 text-sm">
+        <div
+          v-if="listed === true"
+          class="flex items-center justify-center gap-3 text-sm"
+        >
           <a
             class="
               cursor-pointer
@@ -106,6 +117,7 @@
 </template>
 
 <script>
+  import axios from 'axios';
 export default {
   name: "Plugin",
   props: {
@@ -144,65 +156,66 @@ export default {
     async loadPlugin() {
       const url = `https://api.wordpress.org/plugins/info/1.0/${this.slug}.json`;
 
-      new Promise((resolve, reject) => {
-        fetch(url)
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.error) {
-              this.listed = false;
-            } else {
-              this.listed = true;
-              this.data = data;
-            }
+      try {
+        const response = await axios.get(url);
+        this.data = response.data;
+        this.isLoading = false;
+        console.log(this.data);
+        this.listed = true;
+      } catch (error) {
+        this.accuracy = 0;
+      }
 
-            resolve(data);
-          })
-          .catch((error) => {
-            reject(error);
-          })
-          .finally(() => {
-            this.isLoading = false;
-          });
-      });
+      return true;
     },
 
     async searchPlugin() {
       const url = `https://api.wordpress.org/plugins/info/1.2/?action=query_plugins&request[search]=${this.slug}`;
 
-      new Promise((resolve, reject) => {
-        fetch(url)
-          .then((response) => response.json())
-          .then((data) => {
- 
-            if (data.plugins.length > 0) {
-              this.data = data.plugins[0];
-              this.listed = true;
-            } else {
-              this.listed = false;
-            }
+      try {
+        const response = await axios.get(url);
+        this.listed = response.data.plugins.find(
+          (plugin) => plugin.slug === this.slug
+        );
 
-            resolve(data);
-          })
-          .catch((error) => {
-            reject(error);
-          })
-          .finally(() => {
-            this.isLoading = false;
-          });
-      });
+        this.data = response.data.plugins[0];
+        this.isLoading = false;
+      } catch (error) {
+        this.accuracy = 0;
+
+        this.isLoading = false;
+      }
+    },
+
+
+    // get banner image
+    getBanner() {
+      if (this.data.banners) {
+        return this.data.banners["high"];
+      } else if (this.data.banners) {
+        return this.data.banners["low"];
+      } else if (this.data.banners) {
+        return this.data.banners["medium"];
+      } else if (this.data.banners) {
+        return this.data.banners["full"];
+      } else {
+        return false;
+      }
     },
   },
   async mounted() {
-    this.loadPlugin().then(async () => {
-      if (this.listed === false) { 
-        if(this.$root.RESTPlugins.includes(this.slug) && this.listed === false) {
-          await this.searchPlugin();
-          this.accuracy = 70;
-        }
+    this.loadPlugin().then(async (found) => {
+      if (
+        found === false &&
+        this.$root.RESTPlugins.includes(this.slug) &&
+        this.listed === false
+      ) {
+        await this.searchPlugin();
+        this.accuracy = 70;
       } else {
         this.accuracy = 100;
       }
-    }); 
+    });
   },
 };
 </script>

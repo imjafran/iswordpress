@@ -135,7 +135,7 @@
 import { constants } from "./helpers";
 import Plugin from "./components/plugin.vue";
 import Theme from "./components/theme.vue";
-import Server from "./components/server.vue";
+// import Server from "./components/server.vue";
 import axios from "axios";
 
 export default {
@@ -143,7 +143,7 @@ export default {
   components: {
     Plugin,
     Theme,
-    Server,
+    // Server,
   },
   data() {
     return {
@@ -373,12 +373,7 @@ export default {
             return route.split("/")[0];
           })
           .filter((plugin) => {
-            return ![
-              "wp",
-              "oembed",
-              "wp-site-health",
-              "wp-block-editor",
-            ].includes(plugin);
+            return !constants.excludes.includes(plugin);
           });
 
         const sheetUrl =
