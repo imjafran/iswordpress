@@ -56,7 +56,9 @@ export const constants = {
     "oembed",
     "wp-site-health",
     "wp-block-editor",
-    "wpcom"
+    "wpcom",
+    "wp.org",
+    "divi"
   ]
 }
 

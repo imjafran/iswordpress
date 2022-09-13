@@ -133,6 +133,7 @@
 <script>
 // import Theme from "./theme";
 import { constants } from "./helpers";
+import Sheet from "./sheet";
 import Plugin from "./components/plugin.vue";
 import Theme from "./components/theme.vue";
 // import Server from "./components/server.vue";
@@ -162,6 +163,8 @@ export default {
       pluginsList: [],
       RESTData: {},
       RESTPlugins: [],
+      pluginShorts: [],
+      proPlugins: [],
     };
   },
 
@@ -197,7 +200,7 @@ export default {
     },
 
     buttonText() {
-      if (this.state.isLoading) return "Checking...";
+      if (this.state.isLoading) return "Scanning site...";
 
       if (!this.isValidURL) return "It's not WordPress!";
       if (this.isInternalURL) return "It's not WordPress!";
@@ -349,7 +352,7 @@ export default {
     },
 
     async initPlugins() {
-      let plugins = this.html.match(/wp-content\/plugins\/(.*?)\//g);
+      let plugins = this.html.match(/wp-content\/plugins\/[0-9a-zA-Z-_]+/g);
 
       if (plugins && plugins.length > 0) {
         plugins = plugins.map((plugin) => {
@@ -366,7 +369,7 @@ export default {
       }
 
       // parse more plugins from rest data
-      if (this.RESTData && this.RESTData.namespaces) {
+      if (this.RESTData.namespaces) {
         const routes = this.RESTData.namespaces;
         const plugins = routes
           .map((route) => {
@@ -375,44 +378,42 @@ export default {
           .filter((plugin) => {
             return !constants.excludes.includes(plugin);
           });
-
-        const sheetUrl =
-          "https://docs.google.com/spreadsheets/export?format=csv&id=1jbMcWsFK3ymaUJnD3WpbZAQQhrUgR1pSLE17mkO_nqg&gid=0";
-
-        const response = await axios.get(sheetUrl);
-        const rows = response.data.split("\n").slice(1);
-
-        let plugin_shorts = {};
-        rows.forEach((row) => {
-          const [plugin, short] = row.split(",");
-          plugin_shorts[plugin] = short
-        });
-
-        console.log(plugin_shorts);
+ 
         let pluginsList = [];
 
         this.RESTPlugins = [];
 
+        const sheet = new Sheet();
+        const pluginShorts = await sheet.getShorts();
+        console.log('pluginShorts', pluginShorts);
+
         plugins.forEach((plugin) => {
-          if (plugin_shorts[plugin]) {
-            pluginsList.push(plugin_shorts[plugin]);
+          if (pluginShorts[plugin]) {
+            pluginsList.push(pluginShorts[plugin].trim());
           } else {
             pluginsList.push(plugin);
             this.RESTPlugins.push(plugin);
           }
         });
+ 
+        pluginsList = [...this.pluginsList, ...pluginsList];
+        this.pluginsList = [...new Set(pluginsList)];
 
-        pluginsList = [...new Set(pluginsList)];
-        let uniquePlugins = [...new Set(pluginsList)];
-
-        this.RESTPlugins = [...new Set(this.RESTPlugins)];
-        this.pluginsList = [...this.pluginsList, ...uniquePlugins];
+        console.log('this.pluginsList', this.pluginsList);
       }
+    },
+    
+    // load sheet
+    async loadSheet() {
+      
+      this.proPlugins = await sheet.getProPlugins();
     },
   },
 
   // created
   created() {
+
+    // this.loadSheet();
     // init scripts
     this.init();
   },

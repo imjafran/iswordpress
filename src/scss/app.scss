@@ -25,7 +25,7 @@ body {
 }
 
 .isWP {
-  @apply w-72 bg-slate-700 text-slate-200 max-h-96 overflow-y-auto scrollbar scrollbar-thin scrollbar-thumb-transparent hover:scrollbar-thumb-slate-500 scrollbar-track-transparent transition duration-75 relative;
+  @apply w-96 bg-slate-700 text-slate-200 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-transparent hover:scrollbar-thumb-slate-500 scrollbar-track-transparent transition duration-75 relative;
 
   &.full {
     @apply max-h-full overflow-y-auto w-96 scrollbar scrollbar-thin scrollbar-thumb-transparent hover:scrollbar-thumb-slate-500 scrollbar-track-transparent transition duration-75;
@@ -54,7 +54,7 @@ body {
   }
 
   ._header {
-    @apply sticky top-0  bg-slate-600 tracking-wide rounded-md px-3 py-3 text-base text-white font-medium flex items-center justify-center gap-3 text-center;
+    @apply sticky top-0  bg-slate-600 tracking-wide rounded-md px-3 py-3 text-xl text-white font-medium flex items-center justify-center gap-3 text-center;
 
     font-family: "OpenSans";
 
@@ -90,7 +90,7 @@ body {
     @apply flex items-center justify-center bg-slate-600;
 
     & > * {
-      @apply w-full py-2 px-2 cursor-pointer text-white hover:bg-slate-500 capitalize transition-colors duration-100 ease-in-out flex items-center gap-2 justify-center text-center;
+      @apply w-full py-3 px-4 text-lg cursor-pointer text-white hover:bg-slate-500 capitalize transition-colors duration-100 ease-in-out flex items-center gap-2 justify-center text-center font-medium;
 
       span {
         @apply text-base text-yellow-200 block h-full px-0.5 pointer-events-none;
@@ -119,6 +119,19 @@ body {
 
     label {
     }
+  }
+
+  ._overlay-banner {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
+    @apply px-2 py-1;
+
+    &.down {
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 100%);
+    }
+  }
+
+  ._plugin-banner {
+    min-height: 100px;
   }
 
   ._footer {

@@ -15,8 +15,7 @@
     <!-- content  -->
     <div class="p-1" v-else>
       <div
-        class="bg-white w-full mb-2 rounded-sm relative"
-        v-if="hasScreenshot"
+        class="bg-white w-full mb-2 rounded-sm relative" 
       >
         <a
           v-if="screenshot"
@@ -60,52 +59,52 @@
           </a>
         <img
           data-id="screenshot"
-          class="mx-auto max-h-28"
+          class="mx-auto max-h-40"
           :src="
             screenshot ||
-            'https://cdn.pixabay.com/photo/2015/01/05/11/02/wordpress-589121_1280.jpg'
+            '/images/iswp.png'
           "
         />
       </div> 
 
-      <div class="flex flex-col gap-1">
+      <div class="flex flex-col gap-1 w-full">
 
-        <div class="flex gap-3">
+        <div class="flex gap-3  w-full" v-if="data.name">
           <span class="text-slate-500 w-1/2">Name: </span>
           <p class="w-full"><a target="_blank" :href="data.theme_uri || '#'">{{data.name}}</a></p>
         </div>
 
-        <div class="flex gap-3" v-if="data.author">
+        <div class="flex gap-3  w-full" v-if="data.author">
           <span class="text-slate-500 w-1/2">Author: </span>
           <p class="w-full"><a target="_blank" :href="data.author_uri || '#'">{{data.author}}</a></p>
         </div>
 
-        <div class="flex gap-3" v-if="data.version">
+        <div class="flex gap-3 w-full" v-if="data.version">
           <span class="text-slate-500 w-1/2">Version: </span>
           <p class="w-full">{{data.version}}</p>
         </div>
 
-        <div class="flex gap-3" v-if="data.text_domain">
+        <div class="flex gap-3 w-full" v-if="data.text_domain">
           <span class="text-slate-500 w-1/2">Text domain: </span>
           <p class="w-full">{{data.text_domain}}</p>
         </div>
 
-        <div class="flex gap-3" v-if="data.requires_at_least">
+        <div class="flex gap-3 w-full" v-if="data.requires_at_least">
           <span class="text-slate-500 w-1/2">Requires: </span>
           <p class="w-full">{{data.requires_at_least}}</p>
         </div>
 
-        <div class="flex gap-3" v-if="data.requires_php">
+        <div class="flex gap-3 w-full mb-2" v-if="data.requires_php">
           <span class="text-slate-500 w-1/2">Requires PHP: </span>
           <p class="w-full">{{data.requires_php}}</p>
         </div>
 
-        <div class="" v-if="data.license">
+        <div class=" w-full mb-2" v-if="data.license">
           <span class="text-slate-500 w-1/2">License: </span>
           <p class="w-full"><a target="_blank" :href="data.license_uri || '#'">{{data.license}}</a></p>
         </div>
 
-        <div class="" v-if="data.tags">
+        <div class=" w-full mb-2" v-if="data.tags">
           <span class="text-slate-500">Tags ({{data.tags.split(',').length || 0}}): </span>
           <p class="w-full">
             <span  v-for="(tag, $index) in data.tags.split(',')" :key="tag">
@@ -114,14 +113,14 @@
           </p>
         </div>
 
-        <div class="" v-if="data.description">
+        <div class=" w-full mb-2" v-if="data.description">
           <span class="text-slate-500">Description: </span>
           <p class="w-full">{{data.description}}</p>
         </div>
 
 
 
-        <div class="mt-6">
+        <div class="mt-6 w-full">
           <div class="flex items-center justify-center gap-3" v-if="listed">
           <a
             class="flex items-center justify-center gap-2"
@@ -136,7 +135,7 @@
             >Homepage             
           </a>          
         </div>
-        <p v-else class="text-sm text-red-400 italic text-center">Not listed on WordPres.org</p>
+        <p v-else class="text-sm text-red-400 italic text-center">Not listed on WordPress.org</p>
         </div>
       </div>
     </div>

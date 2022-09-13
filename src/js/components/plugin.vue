@@ -27,18 +27,10 @@
         "
         @click.prevent="details = !details"
       >
+        <span class="mr-2" v-if="logo"
+          ><img class="w-6 rounded-full" :src="logo" alt="Logo"
+        /></span>
         <span class="font-medium text-base w-full" v-html="short_name"></span>
-        <div class="w-20 text-right">
-          <span
-            class="px-2 text-xs py-1 rounded-sm text-right"
-            :class="{
-              'text-red-500': accuracy < 50,
-              'text-yellow-500': accuracy >= 50 && accuracy < 75,
-              'b text-green-500': accuracy >= 75,
-            }"
-            >{{ accuracy }}%</span
-          >
-        </div>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           class="fill-current w-4 h-4 text-slate-400 transition duration-150"
@@ -53,44 +45,64 @@
       </div>
 
       <div v-if="details" class="bg-slate-600 p-3 flex flex-col gap-2">
-        <div><span class="font-bold" v-html="name"></span></div>
-        <div v-if="data.author">
-          <span class="text-slate-500">By </span>
-          <span v-html="data.author"></span>
-        </div>
-        <div v-if="data.version">
-          <span class="text-slate-500">Version </span> {{ data.version }}
-        </div>
-
-        <div>
-          <span class="text-slate-500">Accuracy </span>
-          <span
-            class="text-sm rounded-sm"
-            :class="{
-              'text-red-500': accuracy < 50,
-              'text-yellow-500': accuracy >= 50 && accuracy < 75,
-              'b text-green-500': accuracy >= 75,
-            }"
-            >{{ accuracy }}%</span
+        <div
+          class="
+            _plugin-banner
+            w-full
+            relative
+            flex flex-col
+            justify-between
+            rounded-sm
+            overflow-hidden
+          "
+          :style="`background: url(${banner}) no-repeat center center / cover;`"
+        >
+          <div class="_overlay-banner">
+            <h3 class="font-bold text-lg z-50 p-1 text-white" v-html="name"></h3>
+          </div>
+          <div
+            class="
+              _overlay-banner
+              down
+              flex
+              items-center
+              justify-between
+              p-3
+              rounded-sm text-sm
+            "
           >
+            <div v-if="data.author">By <span v-html="data.author"></span></div>
+            <div> 
+              <span
+                class="rounded-md font-medium text-white px-2 py-1 text-xs"
+                :class="{
+                  'bg-red-500': accuracy < 50,
+                  'bg-yellow-500': accuracy >= 50 && accuracy < 75,
+                  'bg-green-600': accuracy >= 75,
+                }"
+                >{{ accuracy }}% Match</span
+              >
+            </div>
+          </div>
         </div>
+ 
         <div
           v-if="listed === true"
-          class="flex items-center justify-center gap-3 text-sm"
+          class="flex items-center justify-between gap-3 text-sm my-2"
         >
           <a
             class="
               cursor-pointer
               bg-blue-500
               text-white
-              hover:no-underline hover:bg-blue-600
+              hover:no-underline hover:bg-blue-400
               px-3
               py-1.5
-              rounded-sm
+              rounded-md flex items-center justify-center
             "
             target="_blank"
             :href="'https://wordpress.org/plugins/' + this.slug"
-            >More details</a
+            >View on WordPress.org</a
           >
           <a
             v-if="data.homepage"
@@ -98,18 +110,18 @@
               cursor-pointer
               bg-blue-500
               text-white
-              hover:no-underline hover:bg-blue-600
+              hover:no-underline hover:bg-blue-400
               px-3
               py-1.5
-              rounded-sm
+              rounded-md flex items-center justify-center
             "
             target="_blank"
             :href="data.homepage"
-            >Homepage</a
+            >Visit Homepage</a
           >
         </div>
         <div v-else class="text-red-400 text-center italic text-sm">
-          Not listed on WordPres.org
+          Not listed on WordPress.org
         </div>
       </div>
     </div>
@@ -117,7 +129,7 @@
 </template>
 
 <script>
-  import axios from 'axios';
+import axios from "axios";
 export default {
   name: "Plugin",
   props: {
@@ -132,11 +144,20 @@ export default {
       details: false,
       data: {},
       listed: false,
-      accuracy: 100,
+      accuracy: 30,
+      banner_uri: "",
+      logo_uri: "",
     };
   },
   computed: {
     slug() {
+      return this.slug;
+    },
+    orgSlug() {
+      
+      if(this.data && this.data.slug) {
+        return this.data.slug;
+      }
       return this.slug;
     },
     name() {
@@ -148,74 +169,155 @@ export default {
       );
     },
     short_name() {
-      let name = this.name.slice(0, 17);
+      let name = this.name.slice(0, 40);
       return name.length < this.name.length ? name + "..." : name;
+    },
+    banner() {
+      return (
+        this.banner_uri ||
+        "https://via.placeholder.com/772x250?text=No+banner+image"
+      );
+    },
+    logo() {
+      return this.logo_uri || "/images/iswp.png";
     },
   },
   methods: {
     async loadPlugin() {
       const url = `https://api.wordpress.org/plugins/info/1.0/${this.slug}.json`;
 
-      try {
-        const response = await axios.get(url);
-        this.data = response.data;
+      new Promise((resolve, reject) => {
+        axios
+          .get(url)
+          .then((response) => {
+            this.data = response.data;
+            this.listed = true;
+            this.accuracy = this.calculateAccuracy();
+            resolve();
+          })
+          .catch((error) => {
+            this.listed = false; 
+            resolve();
+          });
+      }).then(() => {
         this.isLoading = false;
-        console.log(this.data);
-        this.listed = true;
-      } catch (error) {
-        this.accuracy = 0;
-      }
-
-      return true;
+        this.accuracy = this.calculateAccuracy();
+      });
     },
 
     async searchPlugin() {
       const url = `https://api.wordpress.org/plugins/info/1.2/?action=query_plugins&request[search]=${this.slug}`;
 
-      try {
-        const response = await axios.get(url);
-        this.listed = response.data.plugins.find(
-          (plugin) => plugin.slug === this.slug
-        );
-
-        this.data = response.data.plugins[0];
+      new Promise((resolve, reject) => {
+        axios
+          .get(url)
+          .then((response) => {
+            const data = response.data.plugins[0];
+            this.data = data;
+            console.log(data);
+            this.listed = true;
+            resolve();
+          })
+          .catch((error) => {
+            this.listed = false;
+            reject();
+          });
+      }).then(() => {
         this.isLoading = false;
-      } catch (error) {
-        this.accuracy = 0;
-
-        this.isLoading = false;
-      }
+        this.accuracy = this.calculateAccuracy();
+      });
     },
 
-
     // get banner image
-    getBanner() {
-      if (this.data.banners) {
-        return this.data.banners["high"];
-      } else if (this.data.banners) {
-        return this.data.banners["low"];
-      } else if (this.data.banners) {
-        return this.data.banners["medium"];
-      } else if (this.data.banners) {
-        return this.data.banners["full"];
-      } else {
-        return false;
-      }
+    async loadBanner() {
+      const extensions = ["png", "jpg", "gif", "jpeg"];
+      const imageUri =
+        "https://ps.w.org/" + this.orgSlug + "/assets/banner-772x250.";
+
+      new Promise((resolve, reject) => {
+        let image = new Image();
+        image.onload = () => resolve(imageUri + extensions[0]);
+        image.onerror = () => {
+          extensions.shift();
+          if (extensions.length) {
+            image.src = imageUri + extensions[0];
+          } else {
+            reject();
+          }
+        };
+        image.src = imageUri + extensions[0];
+      })
+        .then((image) => {
+          this.banner_uri = image;
+        })
+        .catch(() => {
+          this.banner_uri =
+            "https://via.placeholder.com/772x250?text=No+banner+image";
+        });
+    },
+
+    async loadLogo() {
+      const extensions = ["png", "jpg", "gif", "jpeg"];
+      const imageUri =
+        "https://ps.w.org/" + this.orgSlug + "/assets/icon-256x256.";
+
+      new Promise((resolve, reject) => {
+        let image = new Image();
+        image.onload = () => resolve(imageUri + extensions[0]);
+        image.onerror = () => {
+          extensions.shift();
+          if (extensions.length) {
+            image.src = imageUri + extensions[0];
+          } else {
+            reject();
+          }
+        };
+        image.src = imageUri + extensions[0];
+      })
+        .then((image) => {
+          this.logo_uri = image;
+        })
+        .catch(() => {});
+    },
+
+    calculateAccuracy() {
+      let accuracy = 100;
+      const slug = this.slug.replace(/-/g, " ");
+      const name = this.name.replace(/-/g, " ");
+      if(this.data.description) {
+        const description = this.data.description.replace(/-/g, " ");
+        if (!description.includes(slug) && !description.includes(name)) {
+          accuracy -= 10;
+        }
+      } 
+      if (slug !== name) {
+        accuracy -= 10;
+      } 
+
+      return accuracy;
     },
   },
   async mounted() {
-    this.loadPlugin().then(async (found) => {
-      if (
-        found === false &&
+    new Promise((resolve, reject) => {
+      this.loadPlugin().then(async (found) => {
+      if ( 
         this.$root.RESTPlugins.includes(this.slug) &&
         this.listed === false
       ) {
         await this.searchPlugin();
         this.accuracy = 70;
+        resolve();
       } else {
         this.accuracy = 100;
+        resolve();
       }
     });
+    }).then(() => {
+      this.loadLogo();
+      this.loadBanner();
+    });
+
+ 
   },
 };
 </script>
