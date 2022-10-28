@@ -186,45 +186,80 @@ export default {
     async loadPlugin() {
       const url = `https://api.wordpress.org/plugins/info/1.0/${this.slug}.json`;
 
-      new Promise((resolve, reject) => {
+      return new Promise((resolve, reject) => {
         axios
           .get(url)
           .then((response) => {
             this.data = response.data;
             this.listed = true;
-            this.accuracy = this.calculateAccuracy();
-            resolve();
+            this.accuracy = 100;
+            resolve(true);
           })
           .catch((error) => {
             this.listed = false; 
-            resolve();
+            resolve(false);
           });
-      }).then(() => {
-        this.isLoading = false;
-        this.accuracy = this.calculateAccuracy();
       });
     },
 
     async searchPlugin() {
       const url = `https://api.wordpress.org/plugins/info/1.2/?action=query_plugins&request[search]=${this.slug}`;
 
-      new Promise((resolve, reject) => {
+      return new Promise((resolve, reject) => {
         axios
           .get(url)
           .then((response) => {
-            const data = response.data.plugins[0];
-            this.data = data;
+            const plugins = response.data.plugins;
+
+            if( !plugins || plugins.length === 0 ) {
+              this.listed = false;
+              resolve(false);
+              return;
+            }
+
+            let plugin = null;
+
+            // search by slug, accuracy 80%
+            plugin = plugins.find((p) => p.slug === this.slug);
+            this.accuracy = 100;
+
+            // search by name, accuracy 70%
+            if (!plugin) {
+              plugin = plugins.find((p) => p.name === this.name);
+              this.accuracy = 80;
+            }
+
+            // search by description, accuracy 70%
+            if (!plugin) {
+              plugin = plugins.find((p) => p.description === this.name);
+              this.accuracy = 60;
+            }
+
+
+            // search in tags object, accuracy 60%
+            if (!plugin) {
+              plugin = plugins.find((p) => {
+                const tags = Object.values(p.tags);
+                return tags.includes(this.slug);
+              });
+              this.accuracy = 70;
+            }
+
+            // if plugin not found, accuracy 30%
+            if (!plugin) {
+              this.accuracy = 30; 
+              resolve(false);
+            } 
+
+            this.data = plugin;
             console.log(data);
             this.listed = true;
-            resolve();
+            resolve(true);
           })
           .catch((error) => {
             this.listed = false;
-            reject();
+            resolve(false);
           });
-      }).then(() => {
-        this.isLoading = false;
-        this.accuracy = this.calculateAccuracy();
       });
     },
 
@@ -234,15 +269,16 @@ export default {
       const imageUri =
         "https://ps.w.org/" + this.orgSlug + "/assets/banner-772x250.";
 
-      new Promise((resolve, reject) => {
+      return new Promise((resolve, reject) => {
         let image = new Image();
         image.onload = () => resolve(imageUri + extensions[0]);
         image.onerror = () => {
           extensions.shift();
           if (extensions.length) {
             image.src = imageUri + extensions[0];
+            resolve(true);
           } else {
-            reject();
+            resolve(false);
           }
         };
         image.src = imageUri + extensions[0];
@@ -280,43 +316,20 @@ export default {
         .catch(() => {});
     },
 
-    calculateAccuracy() {
-      let accuracy = 100;
-      const slug = this.slug.replace(/-/g, " ");
-      const name = this.name.replace(/-/g, " ");
-      if(this.data.description) {
-        const description = this.data.description.replace(/-/g, " ");
-        if (!description.includes(slug) && !description.includes(name)) {
-          accuracy -= 10;
-        }
-      } 
-      if (slug !== name) {
-        accuracy -= 10;
-      } 
-
-      return accuracy;
-    },
   },
   async mounted() {
-    new Promise((resolve, reject) => {
-      this.loadPlugin().then(async (found) => {
-      if ( 
-        this.$root.RESTPlugins.includes(this.slug) &&
-        this.listed === false
-      ) {
-        await this.searchPlugin();
-        this.accuracy = 70;
-        resolve();
-      } else {
-        this.accuracy = 100;
-        resolve();
-      }
-    });
-    }).then(() => {
-      this.loadLogo();
-      this.loadBanner();
-    });
 
+    let found = await this.loadPlugin();
+    
+    if(!found) {
+      found = await this.searchPlugin();
+    }
+
+    if (found) {
+      await this.loadBanner();
+      await this.loadLogo();
+    }
+     
  
   },
 };
