@@ -117,7 +117,7 @@
 </template>
 
 <script>
-  import axios from 'axios';
+import axios from "axios";
 export default {
   name: "Plugin",
   props: {
@@ -156,37 +156,139 @@ export default {
     async loadPlugin() {
       const url = `https://api.wordpress.org/plugins/info/1.0/${this.slug}.json`;
 
-      try {
-        const response = await axios.get(url);
-        this.data = response.data;
-        this.isLoading = false;
-        console.log(this.data);
-        this.listed = true;
-      } catch (error) {
-        this.accuracy = 0;
-      }
+      // try {
+      //   const response = await axios.get(url);
+      //   this.data = response.data;
+      //   this.isLoading = false;
+      //   console.log(this.data);
+      //   this.listed = true;
+      // } catch (error) {
+      //   this.accuracy = 0;
+      // }
 
-      return true;
+      return new Promise((resolve, reject) => {
+        try {
+          axios
+            .get(url)
+            .then((response) => {
+              this.data = response.data;
+              this.isLoading = false;
+              console.log("response", response.data);
+              this.listed = true;
+              this.accuracy = 100;
+
+              resolve(true);
+            })
+            .catch((error) => {
+              console.log("error", error);
+              this.accuracy = 0;
+              this.listed = false;
+
+              resolve(false);
+            });
+        } catch (error) {
+          console.log("error", error);
+          this.accuracy = 0;
+          this.listed = false;
+
+          resolve(false);
+        }
+      });
     },
 
     async searchPlugin() {
       const url = `https://api.wordpress.org/plugins/info/1.2/?action=query_plugins&request[search]=${this.slug}`;
 
-      try {
-        const response = await axios.get(url);
-        this.listed = response.data.plugins.find(
-          (plugin) => plugin.slug === this.slug
-        );
+      return new Promise(async (resolve, reject) => {
+        try {
+          axios.get(url).then((response) => {
+            const plugins = response.data.plugins;
 
-        this.data = response.data.plugins[0];
-        this.isLoading = false;
-      } catch (error) {
-        this.accuracy = 0;
+            if(plugins.length === 0) {
+              this.accuracy = 0;
+              this.listed = false;
 
-        this.isLoading = false;
-      }
+              resolve(false);
+            }
+
+            // search plugin in slug
+            let plugin = plugins.find(
+              (plugin) =>
+                plugin.slug.toLowerCase().includes(this.slug.toLowerCase())
+            );
+
+            this.accuracy = 70;
+
+            if (!plugin) {
+              plugin = plugins.find(
+                (plugin) =>
+                  plugin.name.toLowerCase().includes(this.slug.toLowerCase())
+              );
+            }
+
+            this.accuracy = 60;
+
+            // search in tags object 
+            if (!plugin) {
+              plugin = plugins.find((plugin) => {
+                let found = false;
+                let tags = Object.values(plugin.tags);
+                tags.forEach((tag) => {
+                  if (tag.toLowerCase().includes(this.slug.toLowerCase())) {
+                    found = true;
+                  }
+                });
+              });
+            }
+
+            this.accuracy = 50;
+
+            // search in description 
+            if (!plugin) {
+              plugin = plugins.find((plugin) => {
+                let found = false;
+                let description = plugin.description;
+                if (description.toLowerCase().includes(this.slug.toLowerCase())) {
+                  found = true;
+                }
+              });
+            }
+
+            this.accuracy = 40; 
+
+            this.isLoading = false; 
+            
+            if (plugin) {
+
+              console.log('found on deep search', plugin);
+              this.data = plugin;
+              this.listed = true;
+
+              resolve(true);
+            } else {
+
+              console.log('not found');
+              this.accuracy = 10;
+              this.listed = false;
+
+              resolve(false);
+            }
+          }).catch((error) => {
+            console.log("error", error);
+            this.accuracy = 10;
+            this.listed = false;
+
+            resolve(false);
+          }); 
+        } catch (error) {
+          console.log("error", error);
+          this.accuracy = 10;
+          this.listed = false;
+
+          resolve(false);
+        }
+      });
     },
-
 
     // get banner image
     getBanner() {
@@ -204,18 +306,17 @@ export default {
     },
   },
   async mounted() {
-    this.loadPlugin().then(async (found) => {
-      if (
-        found === false &&
-        this.$root.RESTPlugins.includes(this.slug) &&
-        this.listed === false
-      ) {
-        await this.searchPlugin();
-        this.accuracy = 70;
-      } else {
-        this.accuracy = 100;
-      }
-    });
+    let found = await this.loadPlugin();
+    
+    if ( found ) return;
+    console.log("found on initial search", found);
+    
+    found = await this.searchPlugin(); 
+    this.isLoading = false;
+    console.log('loading?', this.isLoading); 
+
+
+
   },
 };
 </script>
