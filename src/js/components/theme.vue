@@ -13,7 +13,7 @@
     </div>
 
     <!-- content  -->
-    <div class="p-1" v-else>
+    <div v-else>
       <div
         class="bg-white w-full mb-2 rounded-sm relative" 
       >
@@ -22,11 +22,10 @@
           class="
             cursor-pointer
             text-white
-            hover:bg-blue-400 hover:no-underline
-            bg-blue-500
+            hover:bg-sky-400 hover:no-underline
+            bg-sky-500
             w-8
-            h-6
-            text-sm
+            h-6 
             rounded-md
             absolute
             right-2
@@ -59,15 +58,14 @@
           </a>
         <img
           data-id="screenshot"
-          class="mx-auto max-h-40"
+          class="mx-auto max-h-32 "
           :src="
-            screenshot ||
-            '/images/iswp.png'
+            getScreenshot
           "
         />
       </div> 
 
-      <div class="flex flex-col gap-1 w-full">
+      <div class="flex flex-col gap-1 w-full text-base">
 
         <div class="flex gap-3  w-full" v-if="data.name">
           <span class="text-slate-500 w-1/2">Name: </span>
@@ -79,8 +77,12 @@
           <p class="w-full"><a target="_blank" :href="data.author_uri || '#'">{{data.author}}</a></p>
         </div>
 
+        <div class="flex gap-3 w-full" v-if="orgData.version">
+          <span class="text-slate-500 w-1/2">Latest Version: </span>
+          <p class="w-full">{{orgData.version}}</p>
+        </div>
         <div class="flex gap-3 w-full" v-if="data.version">
-          <span class="text-slate-500 w-1/2">Version: </span>
+          <span class="text-slate-500 w-1/2">Installed Version: </span>
           <p class="w-full">{{data.version}}</p>
         </div>
 
@@ -121,21 +123,21 @@
 
 
         <div class="mt-6 w-full">
-          <div class="flex items-center justify-center gap-3" v-if="listed">
+          <div class="flex items-center justify-center gap-3" v-if="isListed">
           <a
             class="flex items-center justify-center gap-2"
             target="_blank"
             :href="'https://wordpress.org/plugins/' + data.slug"
-            >More Details             
+            >View on WordPress.org      
           </a>          
           <a
             class="flex items-center justify-center gap-2"
             target="_blank"
-            :href="homepage"
+            :href="orgData.homepage"
             >Homepage             
           </a>          
         </div>
-        <p v-else class="text-sm text-red-400 italic text-center">Not listed on WordPress.org</p>
+        <p v-else class="text-sm text-slate-400 italic text-center">This theme is not listed on WordPress.org</p>
         </div>
       </div>
     </div>
@@ -143,8 +145,7 @@
 </template>
 
 <script>
-import { constants } from "./../helpers";
-import axios from "axios";
+import {  Read, parseData } from "./../helpers";
 
 export default {
   name: "Theme",
@@ -157,116 +158,101 @@ export default {
   data() {
     return {
       isLoading: true,
+      screenshot_uri: "",
       details: false,
       data: {},
-      listed: false,
-      hasScreenshot: true,
+      readme: {},
+      css: {},
+      orgData: {},
+      isListed: false,
     };
   },
-  computed: {
-    keys() {
-      return constants.themeKeys;
-    },
-    screenshot() {
-      return this.data.screenshot_uri || "";
+  computed: {    
+    getScreenshot() {
+      return this.screenshot_uri || '/images/iswp.png';
     },
   },
   methods: {
-    parseData(RAWdata) {
-      const data = {};
+    
+    // load from style css
+    async loadStyleSheet() { 
 
-      for (const key in this.keys) {
-        if (this.keys.hasOwnProperty(key)) {
-          const searchString = this.keys[key];
-          // match case insensitive
-          const match = RAWdata.match(
-            new RegExp(searchString + ":\\s*(.*)", "i")
-          );
-          if (match && match.length > 0) {
-            data[key] = match[1];
-          }
-        }
-      }
+      const url = this.$parent.getUrl + "/wp-content/themes/" + this.slug + "/style.css";
+      const data = await Read(url); 
 
       return data;
     },
 
-    // load from style css
-    async loadStyleCSS() {
-      const host = this.$parent.host;
-
-      const response = await fetch(
-        `${host}/wp-content/themes/${this.slug}/style.css`
-      , constants.fetchOptions);
-
-      if (response.ok) {
-        const data = await response.text();
-        this.data = {
-          ...this.data,
-          ...this.parseData(data),
-        };
-        this.listed = true;
-      } else {
-        this.listed = false;
-      }
-    },
-
     // load readme.txt
     async loadReadme() {
-      const host = this.$root.host;
+      const files = [
+        "readme.txt",
+        "README.txt",
+        "README.md",
+        "readme.md",
+        "README",
+        "readme", 
+      ];
 
-      const response = await fetch(
-        `${host}/wp-content/themes/${this.slug}/readme.txt`
-      , constants.fetchOptions);
+      for (const file of files) {
+        const url = this.$parent.getUrl + "/wp-content/themes/" + this.slug + "/" + file;
+        const data = await Read(url);
 
-      if (response.ok) {
-        const data = await response.text();
-        this.data = {
-          ...this.data,
-          ...this.parseData(data),
-        };
-      }
+        return data;    
+      } 
     },
 
     // check screenshot exists
-    async checkScreenshot() {
-      const host = this.$root.host;
+    async checkScreenshot() { 
 
-      const response = await fetch(
-        `${host}/wp-content/themes/${this.slug}/screenshot.png`
-      , constants.fetchOptions);
+      const url = `${this.$root.getUrl}/wp-content/themes/${this.slug}/screenshot.png`;
+      const exists = await Read(url);
 
-      if (response.ok) {
-        this.data.screenshot_uri = `${host}/wp-content/themes/${this.slug}/screenshot.png`;
-      } else {
-        this.hasScreenshot = false;
-        this.data.screenshot_uri = "";
-      }
+      this.screenshot_uri = exists ? url : null; 
     },
 
-    // check if theme is listed on wordpress.org
-    async checkListed() {
-      axios
-        .get(
-          `https://api.wordpress.org/themes/info/1.1/?action=theme_information&request[slug]=${this.slug}`
-        )
-        .then((response) => {
-          const data = response.data;
-          if (data) {
-            this.listed = true;
-          }
-        })
-        .catch((error) => {
-          this.listed = false;
-        });
+    // check if theme is isListed on wordpress.org
+    async loadOrgData() {
+      const url = `https://api.wordpress.org/themes/info/1.1/?action=theme_information&request[slug]=${this.slug}`;
+
+      const data = await Read(url); 
+      
+      if (data) {
+        this.isListed = true;
+      } 
+
+      return data;
     },
   },
-  async mounted() {
-    await this.loadStyleCSS();
+  async created() {
+    
+    this.checkScreenshot(); 
+
+
+    const css = await this.loadStyleSheet();
+    if(css) { 
+      this.css = parseData(css);
+    }
+
     this.isLoading = false;
-    await this.loadReadme();
-    await this.checkScreenshot();
-    await this.checkListed();
+        
+
+    const readme = await this.loadReadme();
+    if(readme) { 
+      this.readme = parseData(readme);
+    }
+
+    const orgData = await this.loadOrgData();
+    if(orgData) { 
+      this.orgData = orgData;
+    }
+ 
+
+    this.data = { 
+      ...this.readme,
+      ...this.css,
+    };
+ 
   },
 };
 </script>

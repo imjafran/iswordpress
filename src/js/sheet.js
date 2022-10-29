@@ -1,33 +1,31 @@
-import axios from "axios";
+import { Read } from "./helpers.js";
 
-class Sheet {
-  sheet_url =
+const sheet_url =
   "https://docs.google.com/spreadsheets/export?format=csv&id=1jbMcWsFK3ymaUJnD3WpbZAQQhrUgR1pSLE17mkO_nqg&gid=";
+const shortsTabId = 0;
+const proTabId = 1290219858;
 
-  shortsTabId = 0;
-
-  proTabId = 1290219858;
-
+export const Sheet = {
+   
   // get shorts
   async getShorts() {
-    const response = await axios.get(this.sheet_url + this.shortsTabId);
-    const data = response.data;
+    const data = await Read(sheet_url + shortsTabId); 
 
     const lines = data.split("\n").slice(1);
     
     // key value pair 
     const shorts = {};
     lines.forEach((line) => {
-      const [key, value] = line.split(",");
-      shorts[key] = value.replace(/"/g, "");
+      const [key, value] = line.split(",")
+      shorts[key] = value.replace(/"/g, "").trim();
     });
 
     return shorts;
-  }
+  },
 
   // get pro
   async getProPlugins() {
-    const response = await axios.get(this.sheet_url + this.proTabId);
+    const response = await axios.get(sheet_url + proTabId);
     const data = response.data;
 
     const lines = data.split("\n").slice(1);
@@ -35,5 +33,3 @@ class Sheet {
     return lines;
   }
 }
-
-export default Sheet;

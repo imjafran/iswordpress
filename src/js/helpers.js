@@ -1,12 +1,17 @@
 import axios from "axios";
 
-export const REST = (file) => {
-  const base = "https://test.jafran.me/iswp.php?host=";
-  return axios.get(base + file);
+export const Read = async (url ) => {
+  return new Promise((resolve, reject) => {
+    axios
+      .get(url)
+      .then((response) => { 
+        resolve(response.data || null);
+      })
+      .catch((error) => {
+        resolve(false);
+      });
+  });
 };
-
-
-
 
 export const constants = {
   themeKeys: {
@@ -15,7 +20,8 @@ export const constants = {
     description: "Description",
     author: "Author",
     author_uri: "Author URI",
-    version: "Version",
+    version: "Version", 
+    stable_tag: "Stable tag",
     license: "License",
     license_uri: "License URI",
     tags: "Tags",
@@ -38,8 +44,8 @@ export const constants = {
     //   name: "server",
     //   label: "Server",
     // },
-  ], 
-  fetchOptions : {
+  ],
+  fetchOptions: {
     method: "GET",
     mode: "cors",
     cache: "no-cache",
@@ -51,20 +57,33 @@ export const constants = {
     referrerPolicy: "no-referrer",
   },
 
-  excludes: [
+  excludes_shorts: [
     "wp",
     "oembed",
     "wp-site-health",
     "wp-block-editor",
     "wpcom",
     "wp.org",
-    "divi"
-  ]
-}
-
-
-
-
-export const getContent = (url) => {
-  return fetch(url, constants.fetchOptions);
+    "divi",
+  ],
 };
+
+
+export const parseData = (RAWdata) => {
+  const data = {};
+
+  for (const key in constants.themeKeys) {
+    if (constants.themeKeys.hasOwnProperty(key)) {
+      const searchString = constants.themeKeys[key];
+      // match case insensitive
+      const match = RAWdata.match(
+        new RegExp(searchString + ":\\s*(.*)", "i")
+      );
+      if (match && match.length > 0) {
+        data[key] = match[1];
+      }
+    }
+  }
+
+  return data;
+}
