@@ -2,8 +2,13 @@ import axios from "axios";
 
 export const Read = async (url ) => {
   return new Promise((resolve, reject) => {
-    axios
-      .get(url)
+    axios(
+      {
+        method: "GET",
+        url: url,  
+        mode: "cors", 
+      }
+    )
       .then((response) => { 
         resolve(response.data || null);
       })

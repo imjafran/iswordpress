@@ -57,7 +57,7 @@
       <div class="tab-content" id="_contents">
         <!-- theme  -->
 
-        <div class="tab-pane p-2" v-if="state.tab === 'theme'">
+        <div class="tab-pane p-3" v-if="state.tab === 'theme'">
           <Theme v-if="themeId" :slug="themeId" />
           <div
             v-else
@@ -72,7 +72,7 @@
         </div>
 
         <!-- plugins  -->
-        <div class="tab-pane p-2" v-if="state.tab === 'plugins'">
+        <div class="tab-pane p-3" v-if="state.tab === 'plugins'">
           <div
             class="flex flex-col gap-3 w-full"
             v-if="getPlugins && getPlugins.length"
@@ -185,17 +185,31 @@ export default {
         host = host.replace("www.", "");
       }
 
+      // remove last domain tld 
+      if (host.includes(".")) {
+        host = host.split(".").slice(0, -1).join(".");
+      }
+      
+
+      // all domain tlds
+      const domains = "com co in net org info biz me co.uk org.uk net.uk ltd.uk plc.uk de fr it nl es se dk no fi eu ch at be pt nl pl ru gr jp cn hk tw au nz ca bd".split(
+        " "
+      );
+
+      // remove all domain tlds
+      domains.forEach((domain) => {
+        if (host.includes("." + domain)) {
+          host = host.replace("." + domain, "");
+        }
+      });
+      
+
       // remove protocol http and https
       if (host.startsWith("http")) {
         host = host.replace("http://", "");
         host = host.replace("https://", "");
       }
-
-      // host without domain tld like .com
-      if (host.includes(".")) {
-        host = host.split(".")[0];
-      }
-
+  
       // let site title tag
       let title = this.html.match(/<title>(.*?)<\/title>/);
 
@@ -215,23 +229,39 @@ export default {
 
             // try matching with host with regex
             let regex = new RegExp(host, "i");
-            if (regex.test(first)) {
-              if (first.length <= host.length + 10) return first;
-            } else if (regex.test(second)) {
-              if (second.length <= host.length + 10) return second;
+            if (regex.test(first) || regex.test(first.replace(' ', ''))) {
+              if (first.length <= host.length + 20) return first;
+            } else if (regex.test(second) || regex.test(second.replace(' ', ''))) {
+              if (second.length <= host.length + 20) return second;
             }
           }
         }
 
         // try matching title with host
         let regex = new RegExp(host, "i");
-        if (regex.test(title)) {
-          if (title.length <= host.length + 10) return title;
+        if (regex.test(title) || title.includes(host) || regex.test(title.replace(' ', ''))) {
+          if (title.length <= host.length + 20) return title;
         }
 
-        if (title.length <= host.length + 10) return title;
+        if (title.length <= host.length + 20) return title;
       }
 
+
+      // if has dot 
+      if (host.includes(".")) {
+        host = host.split(".");
+
+        let first = host[0];
+        let second = host[1] || "";
+
+        // upper first letter of first and second
+        first = first.charAt(0).toUpperCase() + first.slice(1);
+        second = second.charAt(0).toUpperCase() + second.slice(1);
+
+        title = second ? `${second} ${first}` : first;
+
+        return title;
+      }
       // uppercase first letter
       host = host.charAt(0).toUpperCase() + host.slice(1);
 
@@ -470,8 +500,8 @@ export default {
       if (!isWordPress) {
         headlessKeywords.forEach((match) => {
           if (html.includes(match)) {
+            isHeadlessWordPress = !isWordPress;
             isWordPress = true;
-            isHeadlessWordPress = true;
           }
         });
       }
@@ -489,11 +519,9 @@ export default {
  
 
       if (wpJsonResponse) {
-        const isValidData =
-          wpJsonResponse &&
-          "name" in wpJsonResponse &&
-          "description" in wpJsonResponse; 
-        isBackendWordPress = isValidData ? (isWordPress ? false : true) : false;
+        const isValidData = wpJsonResponse && typeof (wpJsonResponse) === "object" && wpJsonResponse.namespaces && wpJsonResponse.namespaces.length > 0; 
+
+        isBackendWordPress = isValidData ? !isWordPress : false;
         isWordPress = isValidData ? true : isWordPress;
         this.RESTData = isValidData ? wpJsonResponse : {};
       }

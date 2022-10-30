@@ -76,9 +76,7 @@
               text-sm
             "
           >
-            <div>
-              Installed {{getInstalledVersion}} 
-            </div>
+            <div>Installed {{ getInstalledVersion }}</div>
             <div>
               <span
                 class="rounded-xl font-medium text-white px-3 py-1.5 text-xs"
@@ -100,9 +98,9 @@
             <span
               v-html="data.author ? 'By ' + data.author : '<em>No Author</em>'"
             ></span>
-          </div> 
-          <div>Current version: {{data.version || 'Unknown'}}</div>
-          <div>Installed version : {{getInstalledVersion}}</div>
+          </div>
+          <div>Current version: {{ data.version || "Unknown" }}</div>
+          <div>Installed version : {{ getInstalledVersion }}</div>
 
           <!-- org -->
           <template v-if="state.isListed">
@@ -137,8 +135,7 @@
 </template>
 
 <script> 
-
-import { Read } from "./../helpers"
+import { parseData, Read } from "./../helpers";
 
 export default {
   name: "Plugin",
@@ -193,13 +190,12 @@ export default {
       );
     },
     getShortName() {
-
       let length = 25;
-      // return first 25 characters 
+      // return first 25 characters
       return this.name.length > length
         ? this.name.substring(0, length) + "..."
         : this.name;
-    }, 
+    },
     getBannerURL() {
       return (
         this.banner_uri ||
@@ -209,8 +205,8 @@ export default {
     getLogoURL() {
       return this.logo_uri || "/images/iswp.png";
     },
-    getInstalledVersion(){
-      const readme = this.readme || '';
+    getInstalledVersion() {
+      const readme = this.readme || "";
 
       // match stable tag with case insensitive
       const stableTag = readme.match(/Stable tag: (.*)/i);
@@ -219,29 +215,28 @@ export default {
       const version = readme.match(/Version: (.*)/i);
 
       // return stable tag if exists
-      if(stableTag && stableTag[1]){
+      if (stableTag && stableTag[1]) {
         return stableTag[1];
       }
 
       // return version if exists
-      if(version && version[1]){
+      if (version && version[1]) {
         return version[1];
       }
 
       // return unknown
-      return 'Unknown';
-    }
+      return "Unknown";
+    },
   },
-  methods: { 
-
+  methods: {
     async loadFromOrg() {
       const url = `https://api.wordpress.org/plugins/info/1.0/${this.slug}.json`;
 
       const data = await Read(url);
 
-      if (data) { 
+      if (data) {
         this.data = data;
-        this.accuracy = 100; 
+        this.accuracy = 100;
       }
 
       return data;
@@ -255,10 +250,19 @@ export default {
 
       if (!data || !plugins || !plugins.length) {
         return false;
-      } 
+      }
 
-      let plugin = plugins.find((p) => p.name.includes(this.name));
-      this.accuracy = 70;
+      let plugin = null;
+
+      // search by slug
+      plugin = plugins.find((p) => p.slug.includes(this.name));
+      this.accuracy = 100;
+
+      // search by name
+      if (!plugin) {
+        plugin = plugins.find((p) => p.name.includes(this.name));
+        this.accuracy = 70;
+      }
 
       // search in tags object, accuracy 60%
       if (!plugin) {
@@ -280,11 +284,11 @@ export default {
         (p) => p.slug === plugin.slug
       );
 
-      if (!foundInPlugins) { 
+      if (!foundInPlugins) {
         this.data = plugin;
         return plugin;
       }
- 
+
       // remove current slug from $root.plugins
       this.$root.plugins = this.$root.plugins.filter(
         (p) => p.slug !== this.slug
@@ -332,32 +336,31 @@ export default {
     },
 
     async loadReadme() {
-      const slugs = [this.slug, this.orgSlug]; 
+      const slugs = [this.slug, this.orgSlug];
       const files = ["readme.txt", "README.txt", "README.md", "readme.md"];
 
       for (let i = 0; i < slugs.length; i++) {
         for (let j = 0; j < files.length; j++) {
           const readmeUrl = `${this.$root.getUrl}wp-content/plugins/${slugs[i]}/${files[j]}`;
-          const fileContent = await Read(readmeUrl); 
+          const fileContent = await Read(readmeUrl);
           if (fileContent) {
             this.readme = fileContent;
-            return;
+            return fileContent;
           }
         }
       }
     },
   },
   async mounted() {
-    let listed = await this.loadFromOrg(); 
+    let listed = await this.loadFromOrg();
 
-    if (!listed) {
-      listed = await this.searchOnOrg(); 
+    if (!listed && this.plugin.source !== "html") {
+      listed = await this.searchOnOrg();
     }
 
     this.state.isLoading = false;
 
-    if (listed) { 
-
+    if (listed) {
       this.state.isListed = true;
 
       this.loadLogo();
@@ -366,8 +369,14 @@ export default {
       this.state.isListed = false;
     }
 
-    // find readme 
-    await this.loadReadme(); 
+    // find readme
+    const readme = await this.loadReadme();
+
+    console.log("readme", readme);
+    if(readme) {
+      this.readme = parseData(readme);
+    }
+
   },
 };
 </script>

@@ -78,11 +78,11 @@
         </div>
 
         <div class="flex gap-3 w-full" v-if="orgData.version">
-          <span class="text-slate-500 w-1/2">Latest Version: </span>
+          <span class="text-slate-500 w-1/2">Latest: </span>
           <p class="w-full">{{orgData.version}}</p>
         </div>
         <div class="flex gap-3 w-full" v-if="data.version">
-          <span class="text-slate-500 w-1/2">Installed Version: </span>
+          <span class="text-slate-500 w-1/2">Installed: </span>
           <p class="w-full">{{data.version}}</p>
         </div>
 
