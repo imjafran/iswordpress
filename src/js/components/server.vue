@@ -16,8 +16,8 @@
   </div>
 </template>
 
-<script>
-  import axios from 'axios';
+<script> 
+import { Read } from "./../helpers"
 export default {
   name: "Server",
    
@@ -31,19 +31,28 @@ export default {
      
   },
   methods: {
+
+    async API(url = ''){ 
+      url = this.$root.getUrl + "wp-json/" + url;
+
+      return await Read(url); 
+    },
+
     async lookupHost() {
       this.isLoading = true;
       const host = this.$root.host
 
       // lookup host 
-      const response = await axios.get(`https://api.wordpress.org/core/version-check/1.7/?locale=en_US&version=5.8&php=7.4&mysql=5.6&local_package=fr_FR&blogs=1&multisite=0&initial_db_version=0&url=${host}&locale=en_US&packages=full&tz=Europe%2FParis&skip_cache=1`)
+      const response = await Read(`https://api.wordpress.org/core/version-check/1.7/?locale=en_US&version=5.8&php=7.4&mysql=5.6&local_package=fr_FR&blogs=1&multisite=0&initial_db_version=0&url=${host}&locale=en_US&packages=full&tz=Europe%2FParis&skip_cache=1`)
 
-      console.log(response);
-
-
-
+      console.log(response); 
 
     },
+
+    async initServer()
+    {
+      
+    }
   },
   async mounted() {
     await this.lookupHost();

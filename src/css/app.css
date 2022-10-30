@@ -22,11 +22,11 @@ body {
 }
 
 .isWP {
-  @apply w-72 bg-slate-700 text-slate-200 max-h-96 overflow-y-auto scrollbar scrollbar-thin scrollbar-thumb-transparent hover:scrollbar-thumb-slate-500 scrollbar-track-transparent transition duration-75 relative;
+  @apply w-96 bg-gray-700 text-slate-200 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-transparent hover:scrollbar-thumb-slate-500 scrollbar-track-transparent transition duration-75 relative;
   font-size: 14px;
 }
 .isWP.full {
-  @apply max-h-full overflow-y-auto w-96 scrollbar scrollbar-thin scrollbar-thumb-transparent hover:scrollbar-thumb-slate-500 scrollbar-track-transparent transition duration-75;
+  @apply max-h-full overflow-y-auto w-96 scrollbar-thin scrollbar-thumb-transparent hover:scrollbar-thumb-slate-500 scrollbar-track-transparent transition duration-75;
 }
 .isWP p,
 .isWP h1,
@@ -48,7 +48,7 @@ body {
   @apply text-slate-300 no-underline hover:text-white hover:underline transition duration-75;
 }
 .isWP ._header {
-  @apply sticky top-0  bg-slate-600 tracking-wide rounded-md px-3 py-3 text-base text-white font-medium flex items-center justify-center gap-3 text-center;
+  @apply sticky top-0  bg-slate-50 tracking-wide  px-3 py-3 text-xl text-white font-medium flex items-center justify-center gap-3 text-center;
   font-family: "OpenSans";
 }
 .isWP ._header.success {
@@ -61,7 +61,7 @@ body {
   @apply bg-yellow-600;
 }
 .isWP ._header.info {
-  @apply bg-blue-600;
+  @apply bg-sky-600;
 }
 .isWP ._header.check {
   @apply cursor-pointer hover:opacity-90;
@@ -70,19 +70,19 @@ body {
   @apply w-5 h-5;
 }
 .isWP ._spinner {
-  @apply block rounded-full border-2 border-white border-y-blue-400 animate-spin;
+  @apply block rounded-full border-2 border-white border-y-sky-400 animate-spin;
 }
 .isWP ._tabs {
   @apply flex items-center justify-center bg-slate-600;
 }
 .isWP ._tabs > * {
-  @apply w-full py-2 px-2 cursor-pointer text-white hover:bg-slate-500 capitalize transition-colors duration-100 ease-in-out flex items-center gap-2 justify-center text-center;
+  @apply w-full py-3 px-4 text-lg cursor-pointer text-white hover:bg-slate-500 capitalize transition-colors duration-100 ease-in-out flex items-center gap-2 justify-center text-center font-medium;
 }
 .isWP ._tabs > * span {
   @apply text-base text-yellow-200 block h-full px-0.5 pointer-events-none;
 }
 .isWP ._tabs > *.active {
-  @apply text-white bg-blue-500 hover:bg-blue-500;
+  @apply text-white bg-sky-600 hover:bg-sky-600;
 }
 .isWP ._table {
   @apply flex flex-col gap-3 text-base;
@@ -96,11 +96,17 @@ body {
 .isWP ._table ._tr > div {
   @apply text-slate-200;
 }
+.isWP ._overlay-banner {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgb(0, 0, 0) 100%);
+}
+.isWP ._plugin-banner {
+  min-height: 130px;
+}
 .isWP ._footer {
   @apply text-center py-2 text-xs text-slate-500;
 }
 .isWP ._footer a {
-  @apply text-slate-500 hover:text-blue-300 transition duration-75;
+  @apply text-slate-500 hover:text-sky-300 transition duration-75;
 }
 
 /*# sourceMappingURL=app.css.map */
