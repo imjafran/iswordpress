@@ -136,13 +136,14 @@ import { constants, Read } from "./helpers";
 import {Sheet} from "./sheet";
 import Plugin from "./components/plugin.vue";
 import Theme from "./components/theme.vue";
+import Server from "./components/server.vue";
 
 export default {
   name: "App",
   components: {
     Plugin,
     Theme,
-    // Server,
+    Server,
   },
   data() {
     return {

@@ -208,6 +208,8 @@ export default {
     getInstalledVersion() {
       const readme = this.readme || "";
 
+      if(!readme) return 'Unknown';
+
       // match stable tag with case insensitive
       const stableTag = readme.match(/Stable tag: (.*)/i);
 
@@ -289,13 +291,16 @@ export default {
         return plugin;
       }
 
-      // remove current slug from $root.plugins
-      this.$root.plugins = this.$root.plugins.filter(
-        (p) => p.slug !== this.slug
+      // if found 2 plugins with same slug in root plugins
+      const foundInPlugins2 = this.$root.plugins.filter(
+        (p) => p.slug === plugin.slug
       );
 
-      this.state.isVisible = false;
-      return false;
+      if (foundInPlugins2.length > 1) {
+        this.state.isVisible = false;
+        return false;
+      }
+       
     },
 
     // load logo
@@ -370,12 +375,7 @@ export default {
     }
 
     // find readme
-    const readme = await this.loadReadme();
-
-    console.log("readme", readme);
-    if(readme) {
-      this.readme = parseData(readme);
-    }
+    const readme = await this.loadReadme(); 
 
   },
 };
