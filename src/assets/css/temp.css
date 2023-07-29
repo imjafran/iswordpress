@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@font-face {
+  font-family: "OpenSans";
+  src: url("/fonts/OpenSans-Regular.ttf");
+}
+@font-face {
+  font-family: "OpenSans";
+  src: url("/fonts/OpenSans-Medium.ttf");
+  font-weight: 500;
+}
+html,
+body {
+  font-family: "OpenSans";
+  font-size: 14px;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  outline: 0;
+}
+
+.is-wp a {
+  @apply inline-flex items-center gap-1 text-teal-600 hover:underline;
+}
+
+/*# sourceMappingURL=temp.css.map */

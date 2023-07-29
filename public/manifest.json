@@ -1,15 +1,12 @@
 {
   "name": "Is WP",
-  "description": "Is WP is simple chrome extension to check if the current website is built on WordPress or not. Is WP scans themes and plugins installed on the website.",
-  "version": "0.0.1",
+  "description": "isWP scans themes and plugins installed on a WordPress website even it's headless, SaaS or BaaS.",
+  "version": "0.0.2",
   "manifest_version": 3,
   "permissions": [
     "activeTab",
     "scripting",
-    "webRequest",
-    "webRequestBlocking",
-    "http://*/",
-    "https://*/"
+    "webRequest"
   ],
   "action": {
     "default_popup": "app.html",

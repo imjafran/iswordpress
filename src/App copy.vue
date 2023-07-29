@@ -116,7 +116,7 @@
         px-3
       "
     >
-      <em class="font-semibold">isWordPress</em> is a Free-forever and
+      <em class="font-semibold">isWP</em> is a free and
       Open-Source Serverless Browser Extension developed by
       <a
         href="https://fb.com/IamJafran"
@@ -124,8 +124,8 @@
         class="text-sky-400 hover:text-sky-300 transition duration-75"
         >Jafran Hasan</a
       >
-      to help WordPress developers and users as
-      <em class="font-semibold">SADAQA</em>.
+      as 
+      <em class="font-semibold">WAQF</em>.
     </footer>
   </div>
 </template>
@@ -312,6 +312,13 @@ export default {
           title: "Scanning " + this.getSiteTitle + "...", 
         };
 
+      if(this.state.error) {
+        return {
+          type: "error",
+          title: "Error",
+        };
+      }
+
       // check if offline
       if (!this.isOnline)
         return {
@@ -421,11 +428,15 @@ export default {
 
     // get location window url from current tab
     async initHost() {
-      const tab = await this.getCurrentTab();
+      try {
+        const tab = await this.getCurrentTab();
       // host name
-      let host = new URL(tab.url).hostname;
-      this.host = host;
-      return host;
+        let host = new URL(tab.url).hostname;
+        this.host = host;
+        return host;
+      } catch (error) {
+        throw error;
+      }
     },
 
 
@@ -651,15 +662,20 @@ export default {
 
   // created
   async created() {
-    await this.initHost();
-    await this.initHTML();
+    this.initHost().then(async () => {
+      await this.initHTML();
 
-    this.state.onLine = navigator.onLine;
+      this.state.onLine = navigator.onLine;
 
-    // check if offline
-    if (this.isOnline) {
-      this.init();
-    }
+      // check if offline
+      if (this.isOnline) {
+        this.init();
+      }
+    }).catch((error) => {
+      console.log(error);
+      this.state.isLoading = false;
+      this.state.error = `Error: Unable to load ${this.getUrl}`;
+    });
   },
 };
 </script>

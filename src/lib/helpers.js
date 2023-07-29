@@ -61,7 +61,6 @@ export const constants = {
     redirect: "follow",
     referrerPolicy: "no-referrer",
   },
-
   excludes_shorts: [
     "wp",
     "oembed",
