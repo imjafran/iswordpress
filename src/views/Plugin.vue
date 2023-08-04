@@ -6,7 +6,7 @@ const isOpen = ref(false)
 </script>
 
 <template>
-    <div class="flex flex-col w-full text-lg border-gray-200 rounded border-y" :class="{'shadow' : isOpen}">
+    <div class="relative flex flex-col w-full text-lg border-gray-200 rounded border-y" :class="{'shadow' : isOpen}">
 
        <!-- accordion head  -->
         <div @click="isOpen = !isOpen" class="flex items-center justify-between w-full px-4 py-4 text-base border-gray-200 cursor-pointer bg-slate-50 hover:bg-white" :class="{'border-b' : isOpen}">

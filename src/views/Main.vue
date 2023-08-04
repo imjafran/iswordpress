@@ -4,14 +4,14 @@ import Header from './Header.vue'
 import Plugins from './Plugins.vue'
 import Theme from './Theme.vue'
 import Security from './Security.vue'
-import useApp from '../lib/app'
-const { state, tabs, setTab, isTab, scanWebsite } = useApp()
+import useAppStore from '../lib/app'
+const { state, tabs, setTab, isTab, scanWebsite } = useAppStore()
 
-onMounted(scanWebsite)
+// onMounted(scanWebsite)
 
 </script>
 <template>
-  <div style="max-height: 600px;" class="relative flex flex-col w-full max-w-lg gap-5 overflow-scroll bg-white scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-teal-600 rounded-b-md">
+  <div style="max-height: 600px; width: 400px;" class="relative flex flex-col gap-5 overflow-scroll bg-white scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-teal-600 rounded-b-md">
 
     <!-- header  -->
     <Header />

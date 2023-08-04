@@ -20,5 +20,16 @@ export default defineConfig({
     minify: true,
     sourcemap: false,
     emptyOutDir: true,
+    // watch
+    watch: {
+        include: 'src/**',
+        exclude: 'node_modules/**',
+        clearScreen: true,
+        // interval: 1000
+    },
+
+    // development mode
+    mode: 'development',
+
   },
 });
