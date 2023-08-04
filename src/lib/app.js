@@ -8,13 +8,10 @@ const useAppStore = defineStore('is-wp', () => {
   // data 
   const state = reactive({
     isLoading: true,
-    pluginsLoaded: false,
-    currentTab: 'theme',
+    currentTab: 'plugins',
     error: null,
   })
 
-  const isLoading = computed(() => state.isLoading)
-  const pluginsLoaded = computed(() => state.pluginsLoaded)
 
   const tabs = ref({
     theme: 'Theme',
@@ -163,8 +160,9 @@ const useAppStore = defineStore('is-wp', () => {
     // console.log('Loading after scanning', isLoading.value);
 
     if (isWordPress.value) {
-      await scanTheme();
-      await scanPlugins();
+      // Parallel scanning 
+      scanTheme();
+      scanPlugins();
     }
 
   }
@@ -185,7 +183,7 @@ const useAppStore = defineStore('is-wp', () => {
       WordPress.value.themeSlug = matches[0].replace(regex, "$1");
 
       // Get theme info from API.
-      console.log('Theme slug', WordPress.value.themeSlug);
+      // console.log('Theme slug', WordPress.value.themeSlug);
 
 
       resolve(true)
@@ -236,13 +234,13 @@ const useAppStore = defineStore('is-wp', () => {
         theme.tags = theme.tags.split(',')
         theme.slug = WordPress.value.themeSlug
 
-        console.log('Theme css response', theme)
+        // console.log('Theme css response', theme)
         WordPress.value.theme = theme;
 
         resolve(true)
 
       }).catch((error) => {
-        console.log('Theme css error', error)
+        // console.log('Theme css error', error)
         resolve(false)
       })
     })
@@ -261,7 +259,7 @@ const useAppStore = defineStore('is-wp', () => {
 
       // Try getting theme information from the API.
       axios.get(`https://api.wordpress.org/themes/info/1.2/?action=theme_information&request[slug]=${WordPress.value.themeSlug}`).then((response) => {
-        console.log('Theme API response', response.data);
+        // console.log('Theme API response', response.data);
 
         const updatable = {
           name: WordPress.value.theme?.name || response.data.name,
@@ -282,11 +280,11 @@ const useAppStore = defineStore('is-wp', () => {
           ...updatable,
         }
 
-        console.log("After concat", WordPress.value.theme);
+        // console.log("After concat", WordPress.value.theme);
         state.loadingTheme = false
         resolve(true)
       }).catch((error) => {
-        console.log('Theme API error', error);
+        // console.log('Theme API error', error);
         state.loadingTheme = false
         resolve(false)
       })
@@ -294,19 +292,77 @@ const useAppStore = defineStore('is-wp', () => {
   }
 
   const scanTheme = async () => {
-    console.log('Scanning theme');
+    // console.log('Scanning theme');
     // Get theme id from content.
     const html = getHTMLContent.value;
-    if (!html) resolve();
+    if (!html) return;
 
     await scanThemeId();
     parseThemeInformationFromStyle();
     pullThemeInformationFromAPI();
   }
 
-  const scanPlugins = async () => { }
-  const scanPluginsInContent = async () => { }
-  const deepScanPlugins = async () => { }
+  const scanPlugins = async () => {
+    // console.log('Scanning plugins');
+    // Get plugins from content.
+    const html = getHTMLContent.value;
+    if (!html) return;
+
+    await scanPluginsInContent();
+    await scanRESTforPlugins();
+  }
+  const scanPluginsInContent = async () => {
+    console.log('Scanning plugins in content');
+
+    state.loadingPlugins = 'Scanning plugins...'
+
+    return new Promise((resolve) => {
+
+      const regex = /wp-content\/plugins\/([^\/]+)\//gi;
+      const matches = getHTMLContent.value.match(regex);
+
+      if (!matches || matches.length === 0) {
+        resolve(false)
+      }
+
+      // Replace the first match with the theme slug.
+      WordPress.value.plugins = matches.map((match) => {
+        return match.replace(regex, "$1");
+      });
+
+      console.log('Plugins found', WordPress.value.plugins);
+      resolve(true)
+
+    })
+  }
+  const scanRESTforPlugins = async () => {
+    return new Promise((resolve) => {
+      state.loadingPlugins = 'Deep scanning...'
+
+      // Make a request to website wp-json endpoint to get all custom namespaces
+      axios.get(`${Website.value.host}/wp-json/`).then((response) => {
+        const namespaces = response.data.namespaces.map((namespace) => {
+          // return first / 
+          return namespace.split('/')[0];
+        }).filter((namespace) => {
+          // filter out default namespaces
+          return !['oembed', 'wp', 'wp-site-health', 'wp-block-editor', WordPress.value.themeSlug].includes(namespace)
+        })
+        
+        console.log('Deep scan response', namespaces); 
+
+        WordPress.value.plugins = WordPress.value.plugins.concat(namespaces);
+        state.loadingPlugins = false
+
+        resolve(true)
+      }).catch((error) => {
+        console.log('Deep scan error', error);
+
+        state.loadingPlugins = false
+        resolve(false)
+      })
+    })
+  }
 
 
   // Scan WordPress
@@ -316,8 +372,6 @@ const useAppStore = defineStore('is-wp', () => {
 
   return {
     state,
-    isLoading,
-    pluginsLoaded,
 
     tabs,
     setTab,
@@ -345,7 +399,7 @@ const useAppStore = defineStore('is-wp', () => {
     scanTheme,
     scanPlugins,
     scanPluginsInContent,
-    deepScanPlugins,
+    scanRESTforPlugins,
   }
 })
 

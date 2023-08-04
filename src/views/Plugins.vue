@@ -1,8 +1,23 @@
 <script setup>
-import { ref } from 'vue'
+import { computed } from 'vue'
 import Spinner from './Spinner.vue'
 import Plugin from './Plugin.vue'
-const plugins = Array.from({ length: 6 })
+import useAppStore from '../lib/app';
+
+const { state, WordPress } = useAppStore()
+
+// const plugins = computed(() => {
+//     if (state.loadingPlugins) return []
+//     if (!WordPress.plugins) return []
+    
+//     // return unique names array
+//     return [...new Set(WordPress.plugins.map(plugin => plugin))]
+// })
+
+const plugins = [
+    'elementor'
+]
+
 </script>
 
 <template>
@@ -18,12 +33,12 @@ const plugins = Array.from({ length: 6 })
                 </svg> {{ plugins.length }} plugins found</span>
 
                  <!-- loader  -->
-                <Spinner v-if="!themeLoaded">Scanning plugins</Spinner> 
+                <Spinner v-if="state.loadingPlugins">{{ state.loadingPlugins === true ? 'Scanning plugins..' : state.loadingPlugins}}</Spinner> 
         </div>
 
         <!-- list  -->
         <div class="flex flex-col gap-3">
-            <Plugin v-for="n in plugins" />
+            <Plugin v-for="plugin in plugins" :slug="plugin"/>
         </div>
     </div>
 </template>
