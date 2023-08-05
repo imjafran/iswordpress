@@ -1,8 +1,8 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import Spinner from './Spinner.vue';
 import useAppStore from '../lib/app.js'
-const { state, WordPress } = useAppStore()
+const { state, WordPress, Website } = useAppStore()
 
 const theme = computed(() => {
     if (state.loadingTheme) return {}
@@ -10,23 +10,69 @@ const theme = computed(() => {
     return WordPress.theme
 })
 
+const screenshot_url = computed(() => {
+    return Website.host + '/wp-content/themes/' + theme.value.slug + '/screenshot.png'
+})
+
 const showFullDescription = ref(false)
 
 const excerpt = computed(() => {
-    if( !theme ) return ''
+    if (!theme) return ''
     let description = theme.value.sections?.description || theme.value.description
     if (!description) return ''
     if (showFullDescription.value) return description
     return description.slice(0, 200) + '...'
 })
 
+
+const loadThemeScreenshot = async () => {
+    const imgElement = document.querySelector('#theme_screenshot')
+
+    const extensions = [
+        'png',
+        'jpg',
+        'svg',
+    ]
+
+    return new Promise(async (resolve) => {
+        let extensionIndex = 0
+
+        const loadImage = () => {
+            const url = Website.host + '/wp-content/themes/' + WordPress.themeSlug + '/screenshot.' + extensions[extensionIndex]
+
+            imgElement.src = url
+
+            imgElement.onload = () => {
+                resolve(true)
+            }
+
+            imgElement.onerror = () => {
+                console.log('screenshot error', url);
+                extensionIndex++
+                if (extensionIndex >= extensions.length) {
+                    resolve(false)
+                } else {
+                    loadImage()
+                }
+            }
+        }
+
+        loadImage()
+
+    })
+
+}
+onMounted(() => {
+    setTimeout(loadThemeScreenshot, 1000)
+})
+
 </script>
 
 <template>
     <section class="px-4 my-3 text-lg text-slate-400">
-        <!-- loader  --> 
+        <!-- loader  -->
         <div v-if="state.loadingTheme" class="my-6">
-            <Spinner>{{ state.loadingTheme === true ? 'Scanning theme...' : state.loadingTheme}}</Spinner>
+            <Spinner>{{ state.loadingTheme === true ? 'Scanning theme...' : state.loadingTheme }}</Spinner>
         </div>
         <div v-if="!state.loadingTheme && !theme" class="my-6 text-center"> Theme not detected ! </div>
         <!-- theme  -->
@@ -34,7 +80,8 @@ const excerpt = computed(() => {
             <!-- basic  -->
             <div class="relative mx-auto bg-white w-44">
                 <span class="absolute text-xs -translate-x-1/2 bottom-2 left-1/2">Screenshot</span>
-                <img :src="theme.screenshot_url || theme.screenshot || 'https://via.placeholder.com/300x200?text=No+Screenshot'"
+                <img id="theme_screenshot"
+                    src="https://via.placeholder.com/300x200.png?text=Screenshot+not+found"
                     class="w-full transition rounded ring-1 ring-transparent hover:ring-slate-300 hover:shadow">
             </div>
             <!-- theme information  -->
@@ -48,16 +95,16 @@ const excerpt = computed(() => {
                 <!-- author  -->
                 <div v-if="theme.author || theme.author_uri" class="flex gap-4 transition rounded">
                     <span class="w-32 font-thin text-gray-400">Author: </span>
-                    <a class="w-full" :href="theme.author_uri || 'javascript:;'"
-                        target="_blank">{{ theme.author || 'Unknown author' }}</a>
+                    <a class="w-full" :href="theme.author_uri || 'javascript:;'" target="_blank">{{ theme.author || 'Unknown author' }}</a>
                 </div>
                 <!-- version  -->
-                <div v-if="theme.version ||  theme.latest_version" class="flex gap-4 transition rounded">
+                <div v-if="theme.version || theme.latest_version" class="flex gap-4 transition rounded">
                     <span class="w-32 font-thin text-gray-400">Version: </span>
-                    <span class="w-full">{{ theme.version || 'Unknown' }} <span v-if="theme.latest_version" class="px-2 py-1 ml-4 text-sm rounded" :class="{
-                        'bg-emerald-50 text-emerald-500' : theme.latest_version === theme.version,
-                        'bg-rose-50 text-rose-500' : theme.latest_version !== theme.version
-                    }">{{ theme.latest_version === theme.version ? 'Latest' : 'Update available' }}</span></span>
+                    <span class="w-full">{{ theme.version || 'Unknown' }} <span v-if="theme.latest_version"
+                            class="px-2 py-1 ml-4 text-sm rounded" :class="{
+                                'bg-emerald-50 text-emerald-500': theme.latest_version === theme.version,
+                                'bg-rose-50 text-rose-500': theme.latest_version !== theme.version
+                            }">{{ theme.latest_version === theme.version ? 'Latest' : 'Update available' }}</span></span>
                 </div>
                 <!-- requires  -->
                 <div v-if="theme.requires || theme.requires_at_least" class="flex gap-4 transition rounded">
@@ -70,7 +117,7 @@ const excerpt = computed(() => {
                     <span class="w-full"> {{ theme.requires_php }} or later</span>
                 </div>
                 <!-- tags  -->
-                <div v-if="theme.tags &&  theme.tags.length" class="flex flex-col gap-2 transition rounded">
+                <div v-if="theme.tags && theme.tags.length" class="flex flex-col gap-2 transition rounded">
                     <span class="font-thin text-gray-400">Tags (found {{ Object.keys(theme.tags).length || 0 }}):</span>
                     <div class="flex flex-wrap w-full gap-2 text-base text-slate-500">
                         <a v-for="(tagName, tag) in theme.tags" class="rounded cursor-pointer">{{ tagName }}</a>
@@ -86,7 +133,8 @@ const excerpt = computed(() => {
             </div>
             <div class="flex flex-col gap-2 mx-4">
                 <a v-if="theme.homepage" :href="theme.homepage" target="_blank" class="mt-2"> Visit homepage</a>
-                <a v-if="theme.listed" :href="`https://wordpress.org/themes/${theme.slug}/`" target="_blank">Get more information on WordPress.org</a>
+                <a v-if="theme.listed" :href="`https://wordpress.org/themes/${theme.slug}/`" target="_blank">Get more
+                    information on WordPress.org</a>
             </div>
         </div>
     </section>

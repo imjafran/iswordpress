@@ -34,7 +34,7 @@ const useAppStore = defineStore('is-wp', () => {
   const WordPress = ref({
     themeSlug: null,
     theme: {},
-    plugins: [],
+    plugins: {},
   })
 
 
@@ -52,10 +52,6 @@ const useAppStore = defineStore('is-wp', () => {
   const isWordPress = computed(() => Website.value.isWordPress)
   const isHeadlessWordPress = computed(() => Website.value.isHeadlessWordPress)
   const isBackendWordPress = computed(() => Website.value.isBackendWordPress)
-
-  const theme = computed(() => WordPress.value.theme)
-  const plugins = computed(() => WordPress.value.plugins)
-
 
 
   // methods 
@@ -314,7 +310,7 @@ const useAppStore = defineStore('is-wp', () => {
   const scanPluginsInContent = async () => {
     console.log('Scanning plugins in content');
 
-    state.loadingPlugins = 'Scanning plugins...'
+    state.loadingPlugins = 'Parsing plugins...'
 
     return new Promise((resolve) => {
 
@@ -326,9 +322,13 @@ const useAppStore = defineStore('is-wp', () => {
       }
 
       // Replace the first match with the theme slug.
-      WordPress.value.plugins = matches.map((match) => {
+      let plugins = matches.map((match) => {
         return match.replace(regex, "$1");
       });
+      
+      plugins.forEach((plugin) => {
+        WordPress.value.plugins[plugin] = {}
+      })
 
       console.log('Plugins found', WordPress.value.plugins);
       resolve(true)
@@ -337,7 +337,7 @@ const useAppStore = defineStore('is-wp', () => {
   }
   const scanRESTforPlugins = async () => {
     return new Promise((resolve) => {
-      state.loadingPlugins = 'Deep scanning...'
+      state.loadingPlugins = 'Scanning plugins...'
 
       // Make a request to website wp-json endpoint to get all custom namespaces
       axios.get(`${Website.value.host}/wp-json/`).then((response) => {
@@ -350,8 +350,11 @@ const useAppStore = defineStore('is-wp', () => {
         })
         
         console.log('Deep scan response', namespaces); 
-
-        WordPress.value.plugins = WordPress.value.plugins.concat(namespaces);
+ 
+        namespaces.forEach((namespace) => {
+          WordPress.value.plugins[namespace] = {}
+        })
+ 
         state.loadingPlugins = false
 
         resolve(true)
@@ -387,9 +390,6 @@ const useAppStore = defineStore('is-wp', () => {
     isWordPress,
     isHeadlessWordPress,
     isBackendWordPress,
-
-    theme,
-    plugins,
 
     scanWebsite,
     detectIfWordPress,
