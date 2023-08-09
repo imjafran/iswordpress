@@ -1,58 +1,49 @@
 import { ref, computed, reactive, onMounted } from 'vue'
 import { defineStore } from 'pinia'
 import axios from 'axios'
-import DemoWebsiteHTML from './../test/html.js'
 
 const useAppStore = defineStore('is-wp', () => {
 
   // data 
   const state = reactive({
     isLoading: true,
-    currentTab: 'plugins',
+    deepScanning: false,
+    loadingTheme: true,
+    loadingPlugins: true,
+    currentTab: 'server',
     error: null,
   })
 
 
-  const tabs = ref({
-    theme: 'Theme',
-    plugins: 'Plugins',
-    security: 'Security',
-  })
-
-  const setTab = (tab) => state.currentTab = tab
-  const isTab = (tab) => state.currentTab === tab
-
   const Website = ref({
-    host: "https://wpfy.co.uk",
-    wordpress_url: "",
     html: "",
     isWordPress: false,
     isHeadlessWordPress: false,
-    isBackendWordPress: false,
   })
 
   const WordPress = ref({
+    name: null,
+    description: null,
+    url: null,
+    gmt_offset: null,
+    site_icon_url: null,
+    namespaces: [],
     themeSlug: null,
-    theme: {},
+    theme: null,
     plugins: {},
   })
 
 
   // computed 
-  const isURLEmpty = computed(() => Website.host === "")
+  const isURLEmpty = computed(() => Website.url === "")
   const isURLInternal = computed(() => {
     const strings = "file:// chrome:// moz-extension:// about:blank brave://";
-    return strings.split(" ").some((string) => Website.value.host.startsWith(string));
+    return strings.split(" ").some((string) => Website.value.url.startsWith(string));
   })
   const isURLValid = computed(() => {
     if (isURLEmpty.value || isURLInternal.value) return false;
-    return Website.value.host.startsWith("http");
+    return Website.value.url.startsWith("http");
   })
-
-  const isWordPress = computed(() => Website.value.isWordPress)
-  const isHeadlessWordPress = computed(() => Website.value.isHeadlessWordPress)
-  const isBackendWordPress = computed(() => Website.value.isBackendWordPress)
-
 
   // methods 
 
@@ -63,6 +54,8 @@ const useAppStore = defineStore('is-wp', () => {
       currentWindow: true,
     });
     Website.value.tab = tabs[0];
+    // set url the root url
+    Website.value.url = new URL(Website.value.tab.url).origin;
   }
 
 
@@ -76,12 +69,7 @@ const useAppStore = defineStore('is-wp', () => {
 
 
   const parseWebsiteContent = async () => {
-    // console.log('Parse website content');
     return new Promise(async (resolve) => {
-
-      // for test 
-      Website.value.html = DemoWebsiteHTML;
-      resolve(true);
 
       const tab = getCurrentTab.value;
       if (!tab) return;
@@ -99,70 +87,88 @@ const useAppStore = defineStore('is-wp', () => {
       }
 
       Website.value.html = content[0].result
+
+      resolve(true);
     })
   }
 
   const scanWordPressInContent = async () => {
-    // console.log('Scan WordPress in content');
-    return new Promise((resolve, reject) => {
-      const html = getHTMLContent.value;
-      if (!html) return;
+    const html = getHTMLContent.value;
+    if (!html) return;
 
-      const regex = /wp-content/gi;
-      const matches = html.match(regex);
-      if (matches && matches.length > 0) {
-        Website.value.isWordPress = true;
+    const regex = /wp-content/gi;
+    const matches = html.match(regex);
+    if (matches && matches.length > 0) {
+      Website.value.isWordPress = true;
+      state.isLoading = false;
+    }
+  }
+
+  const scanWordPressEndpoint = async () => {
+    const wpJson = `${Website.value.url}/wp-json/`;
+
+   return new Promise( async (resolve) => {
+     axios.get(wpJson).then((response) => {
+
+      if (!('home' in response.data)) {
+        state.isLoading = false;
+        state.deepScanning = false;
+        resolve(false);
       }
 
-      resolve();
+
+      WordPress.value.name = response.data.name || ''
+      WordPress.value.url = response.data.url || ''
+      WordPress.value.description = response.data.description || ''
+      WordPress.value.gmt_offset = response.data.gmt_offset || ''
+      WordPress.value.site_icon_url = response.data.site_icon_url || ''
+      WordPress.value.namespaces = response.data.namespaces || []
+
+      Website.value.isHeadlessWordPress = !Website.value.isWordPress;
+      Website.value.isWordPress = true;
+
+      console.log('Headless WordPress', response.data);
+    }).catch((error) => {
+      console.log('Headless error', error);
+    }).finally(() => {
+      state.isLoading = false;
+      state.deepScanning = false;
+      resolve(true);
     })
-  }
-  const scanHeadlessWordPress = async () => {
-    return new Promise((resolve, reject) => {
-      resolve(isWordPress.value);
-    })
-  }
-  const scanBackendWordPress = async () => {
-    return new Promise((resolve, reject) => {
-      resolve(isWordPress.value);
-    })
+   })
   }
 
   const scanWebsite = async () => {
     // Turn on loading
     state.isLoading = true;
-    // console.log('Loading on start', isLoading.value);
-    // loadCurrentTab().then(parseWebsiteContent).then(detectIfWordPress);
+    await loadCurrentTab()
     await parseWebsiteContent()
-    await detectIfWordPress()
+    await detectWordPress()
   }
 
-  const detectIfWordPress = async () => {
-    await scanWordPressInContent()
+  const detectWordPress = async () => {
+    // Scan WordPress in content
+    scanWordPressInContent()
 
-    // console.log('After scanning content', isWordPress.value);
-
-    if (!isWordPress.value) {
-      await scanHeadlessWordPress();
-    }
-
-    if (!isWordPress.value) {
-      await scanBackendWordPress();
-    }
+    // Scan WordPress endpoint
+    await scanWordPressEndpoint();
 
     // Turn off loading
     state.isLoading = false;
 
-    // console.log('Loading after scanning', isLoading.value);
-
-    if (isWordPress.value) {
+    if ( Website.value.isWordPress ) {
       // Parallel scanning 
-      scanTheme();
+      if ( ! Website.value.isHeadlessWordPress ) {
+        console.log('Scanning theme in content');
+        scanTheme();
+      } else {
+        state.loadingTheme = false
+      }
       scanPlugins();
     }
 
   }
-  const scanThemeId = async () => {
+  const scanThemeSlug = async () => {
 
     state.loadingTheme = 'Scanning theme...'
 
@@ -178,11 +184,7 @@ const useAppStore = defineStore('is-wp', () => {
       // Replace the first match with the theme slug.
       WordPress.value.themeSlug = matches[0].replace(regex, "$1");
 
-      // Get theme info from API.
-      // console.log('Theme slug', WordPress.value.themeSlug);
-
-
-      resolve(true)
+      resolve(WordPress.value.themeSlug)
     })
   }
 
@@ -198,7 +200,7 @@ const useAppStore = defineStore('is-wp', () => {
       state.loadingTheme = 'Theme found: Scanning information...'
 
       // If the API fails, try getting theme information from the theme's style.css file.
-      axios.get(`${Website.value.host}/wp-content/themes/${WordPress.value.themeSlug}/style.css`).then((response) => {
+      axios.get(`${Website.value.url}/wp-content/themes/${WordPress.value.themeSlug}/style.css`).then((response) => {
         // console.log('Theme style response', response.data);
 
         // Parse the theme information from the style.css file.
@@ -288,97 +290,142 @@ const useAppStore = defineStore('is-wp', () => {
   }
 
   const scanTheme = async () => {
-    // console.log('Scanning theme');
-    // Get theme id from content.
     const html = getHTMLContent.value;
     if (!html) return;
 
-    await scanThemeId();
-    parseThemeInformationFromStyle();
-    pullThemeInformationFromAPI();
+    await scanThemeSlug();
+    await parseThemeInformationFromStyle();
+    await pullThemeInformationFromAPI();
+    loadThemeScreenshot();
   }
 
+  const loadThemeScreenshot = async () => {
+    const imgElement = document.querySelector('#theme_screenshot')
+
+    const extensions = [
+        'png',
+        'jpg',
+        'svg',
+    ]
+
+    return new Promise(async (resolve) => {
+        let extensionIndex = 0
+
+        const loadImage = () => {
+            const url = Website.value.url + '/wp-content/themes/' + WordPress.value.themeSlug + '/screenshot.' + extensions[extensionIndex]
+ 
+            imgElement.src = url
+            
+            imgElement.onload = () => {
+                resolve(true)
+            }
+
+            imgElement.onerror = () => { 
+                extensionIndex++
+                if (extensionIndex >= extensions.length) {
+                    resolve(false)
+                } else {
+
+                    imgElement.src = 'https://via.placeholder.com/300x150.png?text=No+screenshot+found...'
+                    loadImage()
+                }
+            }
+        }
+
+        loadImage()
+
+    })
+
+}
+
   const scanPlugins = async () => {
-    // console.log('Scanning plugins');
     // Get plugins from content.
     const html = getHTMLContent.value;
     if (!html) return;
 
-    await scanPluginsInContent();
-    await scanRESTforPlugins();
+    if( ! Website.value.isHeadlessWordPress ) {
+      await scanPluginsInContent();
+    }
+
+    await scanPluginsInNamespaces();
   }
+
   const scanPluginsInContent = async () => {
-    console.log('Scanning plugins in content');
 
     state.loadingPlugins = 'Parsing plugins...'
 
-    return new Promise((resolve) => {
+    const regex = /wp-content\/plugins\/([^\/]+)\//gi;
+    const matches = getHTMLContent.value.match(regex);
 
-      const regex = /wp-content\/plugins\/([^\/]+)\//gi;
-      const matches = getHTMLContent.value.match(regex);
+    if (!matches || matches.length === 0) {
+      resolve(false)
+    }
 
-      if (!matches || matches.length === 0) {
-        resolve(false)
+    // Replace the first match with the theme slug.
+    let plugins = matches.map((match) => {
+      return match.replace(regex, "$1");
+    });
+
+    plugins.forEach((plugin) => {
+      WordPress.value.plugins[plugin] = {
+        source: 'content',
+        slug: plugin,
       }
-
-      // Replace the first match with the theme slug.
-      let plugins = matches.map((match) => {
-        return match.replace(regex, "$1");
-      });
-      
-      plugins.forEach((plugin) => {
-        WordPress.value.plugins[plugin] = {}
-      })
-
-      console.log('Plugins found', WordPress.value.plugins);
-      resolve(true)
-
-    })
-  }
-  const scanRESTforPlugins = async () => {
-    return new Promise((resolve) => {
-      state.loadingPlugins = 'Scanning plugins...'
-
-      // Make a request to website wp-json endpoint to get all custom namespaces
-      axios.get(`${Website.value.host}/wp-json/`).then((response) => {
-        const namespaces = response.data.namespaces.map((namespace) => {
-          // return first / 
-          return namespace.split('/')[0];
-        }).filter((namespace) => {
-          // filter out default namespaces
-          return !['oembed', 'wp', 'wp-site-health', 'wp-block-editor', WordPress.value.themeSlug].includes(namespace)
-        })
-        
-        console.log('Deep scan response', namespaces); 
- 
-        namespaces.forEach((namespace) => {
-          WordPress.value.plugins[namespace] = {}
-        })
- 
-        state.loadingPlugins = false
-
-        resolve(true)
-      }).catch((error) => {
-        console.log('Deep scan error', error);
-
-        state.loadingPlugins = false
-        resolve(false)
-      })
     })
   }
 
+  const scanPluginsInNamespaces = async () => {
+    state.loadingPlugins = 'Scanning...'
+
+    let namespaces = WordPress.value.namespaces.map((namespace) => {
+      return namespace.split('/')[0];
+    }).filter((namespace) => {
+      return !['oembed', 'wp', 'wp-site-health', 'wp-block-editor', WordPress.value.themeSlug].includes(namespace)
+    })
+    
+
+    namespaces.forEach((namespace) => {
+      WordPress.value.plugins[namespace] = {
+        source: 'namespace',
+        slug: namespace,
+      }
+    })
+
+    state.loadingPlugins = false
+  }
+
+  // Deep scan
+  const DeepScanPlugins = async () => { 
+
+    state.deepScanning = true
+    // type cors 
+    axios.get( 'https://appdets.com/script/iswp.php' ).then((response) => {
+      Website.value.deepPlugins = response.data
+    }).catch((error) => {
+      console.log('DeepScanPlugins error', error)
+    }).finally(() => {
+      state.deepScanning = false
+
+
+      Website.value.deepPlugins.forEach((plugin) => {
+          // make a request to plugin's url of the website
+          const url = `${Website.value.url}/wp-content/plugins/${plugin.slug}/`
+          axios.get( url ).then((response) => {
+            console.log('DeepScanPlugins response', response.data)
+          }).catch((error) => {})
+
+      })
+    })
+  }
+
+ 
 
   // Scan WordPress
-  onMounted(() => {
-    scanWebsite();
-  })
+  onMounted(scanWebsite) 
+  // onMounted(DeepScanPlugins) 
 
   return {
     state,
-
-    tabs,
-    setTab,
-    isTab,
 
     Website,
     WordPress,
@@ -387,19 +434,7 @@ const useAppStore = defineStore('is-wp', () => {
     isURLInternal,
     getHTMLContent,
 
-    isWordPress,
-    isHeadlessWordPress,
-    isBackendWordPress,
-
-    scanWebsite,
-    detectIfWordPress,
-    scanWordPressInContent,
-    scanHeadlessWordPress,
-    scanBackendWordPress,
-    scanTheme,
-    scanPlugins,
-    scanPluginsInContent,
-    scanRESTforPlugins,
+    scanWebsite
   }
 })
 

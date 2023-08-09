@@ -5,13 +5,9 @@ import useAppStore from '../lib/app.js'
 const { state, WordPress, Website } = useAppStore()
 
 const theme = computed(() => {
-    if (state.loadingTheme) return {}
-    if (!WordPress.theme) return {}
-    return WordPress.theme
-})
-
-const screenshot_url = computed(() => {
-    return Website.host + '/wp-content/themes/' + theme.value.slug + '/screenshot.png'
+    if (state.loadingTheme) return null
+    if (!WordPress.theme) return null
+    return WordPress.theme || null
 })
 
 const showFullDescription = ref(false)
@@ -21,67 +17,25 @@ const excerpt = computed(() => {
     let description = theme.value.sections?.description || theme.value.description
     if (!description) return ''
     if (showFullDescription.value) return description
-    return description.slice(0, 200) + '...'
+    return description.slice(0, 200) + (description > 200 ? '...' : '')
 })
 
-
-const loadThemeScreenshot = async () => {
-    const imgElement = document.querySelector('#theme_screenshot')
-
-    const extensions = [
-        'png',
-        'jpg',
-        'svg',
-    ]
-
-    return new Promise(async (resolve) => {
-        let extensionIndex = 0
-
-        const loadImage = () => {
-            const url = Website.host + '/wp-content/themes/' + WordPress.themeSlug + '/screenshot.' + extensions[extensionIndex]
-
-            imgElement.src = url
-
-            imgElement.onload = () => {
-                resolve(true)
-            }
-
-            imgElement.onerror = () => {
-                console.log('screenshot error', url);
-                extensionIndex++
-                if (extensionIndex >= extensions.length) {
-                    resolve(false)
-                } else {
-                    loadImage()
-                }
-            }
-        }
-
-        loadImage()
-
-    })
-
-}
-onMounted(() => {
-    setTimeout(loadThemeScreenshot, 1000)
-})
+ 
 
 </script>
 
 <template>
     <section class="px-4 my-3 text-lg text-slate-400">
         <!-- loader  -->
-        <div v-if="state.loadingTheme" class="my-6">
+        <div v-if="state.loadingTheme" class="my-6 text-center">
             <Spinner>{{ state.loadingTheme === true ? 'Scanning theme...' : state.loadingTheme }}</Spinner>
         </div>
-        <div v-if="!state.loadingTheme && !theme" class="my-6 text-center"> Theme not detected ! </div>
+        <div v-if="!state.loadingTheme && !theme" class="px-6 text-center"> Theme not detected due to headless architecture ! </div>
         <!-- theme  -->
         <div v-if="!state.loadingTheme && theme" class="flex flex-col gap-3">
             <!-- basic  -->
-            <div class="relative mx-auto bg-white w-44">
-                <span class="absolute text-xs -translate-x-1/2 bottom-2 left-1/2">Screenshot</span>
-                <img id="theme_screenshot"
-                    src="https://via.placeholder.com/300x200.png?text=Screenshot+not+found"
+            <div class="w-full mx-auto bg-white">
+                <img id="theme_screenshot" 
                     class="w-full transition rounded ring-1 ring-transparent hover:ring-slate-300 hover:shadow">
             </div>
             <!-- theme information  -->
@@ -118,8 +72,11 @@ onMounted(() => {
                 </div>
                 <!-- tags  -->
                 <div v-if="theme.tags && theme.tags.length" class="flex flex-col gap-2 transition rounded">
-                    <span class="font-thin text-gray-400">Tags (found {{ Object.keys(theme.tags).length || 0 }}):</span>
-                    <div class="flex flex-wrap w-full gap-2 text-base text-slate-500">
+                    <span class="font-thin text-gray-400">Tags (found {{ Object.keys(theme.tags).length || 0 }}):
+                    <a href="#" class="text-base" @click.prevent="state.showTags = ! state.showTags"> 
+                        {{ state.showTags ? 'Hide' : 'Show' }} tags</a>
+                    </span>
+                    <div v-if="state.showTags" class="flex flex-wrap w-full gap-2 text-base text-slate-500">
                         <a v-for="(tagName, tag) in theme.tags" class="rounded cursor-pointer">{{ tagName }}</a>
                     </div>
                 </div>
@@ -131,10 +88,9 @@ onMounted(() => {
                                 : 'more' }}</a></div>
                 </div>
             </div>
-            <div class="flex flex-col gap-2 mx-4">
+            <div class="flex flex-col gap-2 mx-4 text-base">
                 <a v-if="theme.homepage" :href="theme.homepage" target="_blank" class="mt-2"> Visit homepage</a>
-                <a v-if="theme.listed" :href="`https://wordpress.org/themes/${theme.slug}/`" target="_blank">Get more
-                    information on WordPress.org</a>
+                <a v-if="theme.listed" :href="`https://wordpress.org/themes/${theme.slug}/`" target="_blank">Learn more on WordPress.org</a>
             </div>
         </div>
     </section>
