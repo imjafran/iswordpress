@@ -5,20 +5,13 @@ import MainApp from "./views/Main.vue";
 import "./assets/css/app.css";
 
 import useAppStore from "./lib/app";
- 
-const newIcon = '/images/icon-dark.png';
-chrome.runtime.sendMessage({ command: 'updateIcon', icons: { "32": newIcon, "128": newIcon } });
 
+// console.log(chrome.action.setIcon);
 
+// const newIcon = "/images/icon-32.png";
 
 // // Update the extension's icons
-// chrome.browserAction.setIcon({
-//     path: {
-//       "16": newIcon16,
-//       "48": newIcon48,
-//       "128": newIcon128
-//     }
-//   });
+// chrome.action.setIcon({ path: newIcon })
 
 
 const isWPApp = createApp(MainApp);

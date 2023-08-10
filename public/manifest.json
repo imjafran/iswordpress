@@ -12,15 +12,12 @@
   "action": {
     "default_popup": "app.html",
     "default_icon": {
-      "32": "/images/icon-light.png",
-      "128": "/images/icon-light.png"
+      "32": "/images/icon-dark.png",
+      "128": "/images/icon-dark.png"
     }
   },
   "icons": {
-    "32": "/images/icon-light.png",
-    "128": "/images/icon-light.png"
-  },
-  "background": {
-    "service_worker": "/js/background.js"
+    "32": "/images/icon-dark.png",
+    "128": "/images/icon-dark.png"
   }
 }
