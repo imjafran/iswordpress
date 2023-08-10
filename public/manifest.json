@@ -1,26 +1,26 @@
 {
-  "name": "Is WP",
-  "description": "isWP scans themes and plugins installed on a WordPress website even it's headless, SaaS or BaaS.",
-  "version": "0.0.2",
+  "name": "Is WordPress | Best WordPress theme and plugin detector",
+  "description": "Discover WordPress sites effortlessly. Identify themes for design insights, spot plugins for functionality details. Ideal for developers, designers, and enthusiasts, offering efficient insights into site technology.",
+  "version": "0.0.3",
   "manifest_version": 3,
   "permissions": [
     "activeTab",
     "scripting",
-    "webRequest"
+    "webRequest",
+    "background"
   ],
   "action": {
     "default_popup": "app.html",
     "default_icon": {
-      "16": "/images/iswp-16.png",
-      "32": "/images/iswp-32.png",
-      "48": "/images/iswp-64.png",
-      "128": "/images/iswp.png"
+      "32": "/images/icon-light.png",
+      "128": "/images/icon-light.png"
     }
   },
   "icons": {
-    "16": "/images/iswp-16.png",
-    "32": "/images/iswp-32.png",
-    "48": "/images/iswp-64.png",
-    "128": "/images/iswp.png"
+    "32": "/images/icon-light.png",
+    "128": "/images/icon-light.png"
+  },
+  "background": {
+    "service_worker": "/js/background.js"
   }
 }

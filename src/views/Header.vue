@@ -1,11 +1,13 @@
 <script setup>
 import { computed } from 'vue'
 import useAppStore from '../lib/app'
-const { Website, state } = useAppStore()
+const { Website, state, WordPress } = useAppStore()
 
 
 const siteTitle = computed(() => {
     if (!Website.html) return ''
+
+    if( WordPress.name ) return WordPress.name
 
     const domain = Website.url.replace('https://', '').replace('http://', '').replace('www.', '').split(/[./?#]/)[0]
 
@@ -32,9 +34,42 @@ const siteTitle = computed(() => {
 
 })
 
+// // computed 
+const isEmptyURL = computed(() => !Website.url )
+
+const isPrivateURL = computed(() => {
+
+  if (isEmptyURL.value) {
+    return false;
+  }
+
+  const strings = "file:// chrome:// moz-extension:// about:blank brave://";
+  return strings.split(" ").some((string) => Website.url.startsWith(string));
+})
+
+const isValidURL = computed(() => {
+  if (isEmptyURL.value || isPrivateURL.value) {
+    return false;
+  }
+
+  try {
+    new URL(Website.url);
+    return true;
+  } catch (e) {
+    return false;
+  }
+})
+
 const headerText = computed(() => {
+
+    if( isEmptyURL.value ) return 'Invalid page'
+
+    if( isPrivateURL.value ) return 'Private page' 
+
+    if( state.error ) return state.error === true ? 'Error!' : state.error
+
     // if loading
-    if (state.isLoading) {
+    if ( state.isLoading ) {
         if (typeof state.isLoading === 'string') return state.isLoading
         return 'Scanning ' + (siteTitle.value.length > 20 ? siteTitle.value.substr(0, 20) + '...' : siteTitle.value)
     }
@@ -43,7 +78,7 @@ const headerText = computed(() => {
 })
 
 </script>
-<template>
+<template> 
     <!-- header  -->
     <header class="tracking-wide bg-white border-b border-slate-200">
         <h1 class="flex items-center justify-center gap-3 px-3 py-4 text-gray-700">
@@ -59,9 +94,17 @@ const headerText = computed(() => {
                 class="flex items-center justify-center w-5 h-5 border-2 border-teal-600 rounded-full border-t-transparent animate-spin"></span>
             <span class="text-xl font-medium">{{ headerText }}</span>
         </h1>
-        <div v-if="!state.isLoading" class="px-4 mb-3 text-base text-center text-gray-600">
+
+        <!-- subtitle  -->
+      
+        <div v-if="isValidURL && !state.isLoading" class="px-4 mb-3 text-base text-center text-gray-600">
             <span v-if="Website.isWordPress"> <u>{{ siteTitle }}</u> is running under {{ Website.isHeadlessWordPress ? ' Headless ' : '' }} WordPress </span>
             <span v-if="!Website.isWordPress"> <u>{{ siteTitle }}</u> is not running under WordPress </span>
         </div>
+
+         <div v-if="!isValidURL && !state.isLoading" class="px-4 mb-3 text-base text-center text-gray-600">
+            <span>{{ isEmptyURL ? 'Empty' : isPrivateURL ? 'Private' : 'This' }} page can't be scanned</span>
+        </div>
+
     </header>
 </template>

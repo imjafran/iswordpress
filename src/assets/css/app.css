@@ -595,6 +595,10 @@ video {
   margin-top: 0.5rem !important;
 }
 
+.block {
+  display: block !important;
+}
+
 .inline-block {
   display: inline-block !important;
 }
@@ -660,16 +664,6 @@ video {
 
 .animate-spin {
   animation: spin 1s linear infinite !important;
-}
-
-@keyframes pulse {
-  50% {
-    opacity: .5;
-  }
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
 }
 
 .cursor-pointer {
@@ -900,6 +894,10 @@ video {
 
 .pb-3 {
   padding-bottom: 0.75rem !important;
+}
+
+.pt-6 {
+  padding-top: 1.5rem !important;
 }
 
 .text-center {

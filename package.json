@@ -10,17 +10,17 @@
     "vite": "^4.4.7",
     "vue": "^3.3.4"
   },
-  "name": "iswp",
+  "name": "iswordpress",
   "version": "1.0.0",
-  "main": "tailwind.config.js",
+  "main": "src/main.js",
   "scripts": {
     "css": "npx sass ./src/assets/main.scss ./src/assets/css/temp.css --watch",
     "tailwind": "npx tailwindcss -i ./src/assets/css/temp.css -o ./src/assets/css/app.css --watch --jit",
-    "js": "npx vite",
-    "js:build": "npx vite build"
+    "watch": "npx vite",
+    "build": "npx vite build"
   },
   "keywords": [],
-  "author": "",
+  "author": "iamjafran",
   "license": "ISC",
   "description": ""
 }

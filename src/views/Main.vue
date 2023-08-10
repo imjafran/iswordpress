@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import Header from './Header.vue'
 import Plugins from './Plugins.vue'
 import Theme from './Theme.vue'
-import Server from './Server.vue'
+import Info from './Info.vue'
 import useAppStore from '../lib/app'
 const { state, Website } = useAppStore()
 
@@ -11,7 +11,7 @@ const tabs = computed(() => {
   return {
     theme: 'Theme',
     plugins: 'Plugins',
-    server: 'Server',
+    info: 'Information',
   }
 })
 
@@ -37,13 +37,13 @@ const tabs = computed(() => {
       <section v-show="state.currentTab === 'plugins'">
         <Plugins />
       </section>
-      <section v-show="state.currentTab === 'server'">
-        <Server />
+      <section v-show="state.currentTab === 'info'">
+        <Info />
       </section>
     </main>
     <!-- footer  -->
     <footer v-if="!state.isLoading">
-      <div class="pb-3 text-center text-gray-400"> Developed by <a title="Jafran Hasan" class="text-gray-400" href="//fb.com/IamJafran" target="_blank">Jafran Hasan</a>
+      <div class="pb-3 text-center text-gray-400">Developed by <a title="Jafran Hasan" class="text-gray-400" href="//fb.com/IamJafran" target="_blank">Jafran Hasan</a>
       </div>
     </footer>
   </div>

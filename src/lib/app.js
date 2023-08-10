@@ -10,49 +10,68 @@ const useAppStore = defineStore('is-wp', () => {
     deepScanning: false,
     loadingTheme: true,
     loadingPlugins: true,
-    currentTab: 'server',
-    error: null,
+    currentTab: 'plugins',
+    error: '',
   })
 
 
   const Website = ref({
     html: "",
+    url: "",
     isWordPress: false,
     isHeadlessWordPress: false,
   })
 
   const WordPress = ref({
-    name: null,
-    description: null,
-    url: null,
-    gmt_offset: null,
-    site_icon_url: null,
+    name: '',
+    description: '',
+    url: '',
+    gmt_offset: '',
+    site_icon_url: '',
     namespaces: [],
-    themeSlug: null,
-    theme: null,
+    themeSlug: '',
+    theme: '',
     plugins: {},
   })
 
 
   // computed 
-  const isURLEmpty = computed(() => Website.url === "")
-  const isURLInternal = computed(() => {
+  const isEmptyURL = computed(() => !Website.value.url )
+
+  const isPrivateURL = computed(() => {
+
+    if (isEmptyURL.value) {
+      return false;
+    }
+
     const strings = "file:// chrome:// moz-extension:// about:blank brave://";
     return strings.split(" ").some((string) => Website.value.url.startsWith(string));
   })
-  const isURLValid = computed(() => {
-    if (isURLEmpty.value || isURLInternal.value) return false;
-    return Website.value.url.startsWith("http");
+
+  const isValidURL = computed(() => {
+    if (isEmptyURL.value || isPrivateURL.value) {
+      return false;
+    }
+
+    try {
+      new URL(Website.value.url);
+      return true;
+    } catch (e) {
+      return false;
+    }
   })
 
   // methods 
 
   const loadCurrentTab = async () => {
     if (!chrome.tabs) return;
+ 
     let tabs = await chrome.tabs.query({
       active: true,
       currentWindow: true,
     });
+    console.log('Tabs', tabs);
+
     Website.value.tab = tabs[0];
     // set url the root url
     Website.value.url = new URL(Website.value.tab.url).origin;
@@ -139,9 +158,17 @@ const useAppStore = defineStore('is-wp', () => {
   }
 
   const scanWebsite = async () => {
+
+    
     // Turn on loading
-    state.isLoading = true;
     await loadCurrentTab()
+
+    if( ! isValidURL.value ) {
+      state.isLoading = false;
+      state.error = isEmptyURL.value ? 'Invalid URL' : 'Private URL';
+      return;
+    }
+
     await parseWebsiteContent()
     await detectWordPress()
   }
@@ -358,7 +385,8 @@ const useAppStore = defineStore('is-wp', () => {
     const matches = getHTMLContent.value.match(regex);
 
     if (!matches || matches.length === 0) {
-      resolve(false)
+      state.loadingPlugins = false
+      return;
     }
 
     // Replace the first match with the theme slug.
@@ -421,7 +449,7 @@ const useAppStore = defineStore('is-wp', () => {
  
 
   // Scan WordPress
-  onMounted(scanWebsite) 
+  // onMounted(scanWebsite) 
   // onMounted(DeepScanPlugins) 
 
   return {
@@ -429,9 +457,9 @@ const useAppStore = defineStore('is-wp', () => {
 
     Website,
     WordPress,
-    isURLValid,
-    isURLEmpty,
-    isURLInternal,
+    isValidURL,
+    isEmptyURL,
+    isPrivateURL,
     getHTMLContent,
 
     scanWebsite
