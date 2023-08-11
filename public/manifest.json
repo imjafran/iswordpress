@@ -1,0 +1,23 @@
+{
+  "name": "Is WordPress | Best WordPress theme and plugin detector",
+  "description": "Discover WordPress sites effortlessly. Identify themes for design insights, spot plugins for functionality details. Ideal for developers, designers, and enthusiasts, offering efficient insights into site technology.",
+  "version": "0.0.3",
+  "manifest_version": 3,
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "webRequest",
+    "background"
+  ],
+  "action": {
+    "default_popup": "app.html",
+    "default_icon": {
+      "32": "/images/icon-dark.png",
+      "128": "/images/icon-dark.png"
+    }
+  },
+  "icons": {
+    "32": "/images/icon-dark.png",
+    "128": "/images/icon-dark.png"
+  }
+}

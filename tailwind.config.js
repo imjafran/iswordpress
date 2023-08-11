@@ -1,19 +1,19 @@
 module.exports = {
   content: [
-    "./build/popup.html",
-    "./src/js/*.js",
-    "./src/js/app.vue",
-    "./src/js/components/*.js",
-    "./src/js/components/*.vue",
+    "./index.html",
+    "./src/*.js",
+    "./src/*.vue",
+    "./src/**/*.vue",
+    "./src/**/*.js",
   ],
-  theme: {
-    extend: {},
-  },
   variants: {
     extend: {
       opacity: ["disabled"],
     },
   },
-  plugins: [require('@tailwindcss/typography'), require('tailwind-scrollbar')],
+  plugins: [
+    require('autoprefixer'),
+    require('tailwind-scrollbar')
+  ],
   important: true,
 };
