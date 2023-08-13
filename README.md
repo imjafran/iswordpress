@@ -13,7 +13,7 @@ The 'IsWordPress' Chrome Extension is a powerful tool that enables you to effort
 
 ## How to Use
 
-1. **Installation:** Install the 'IsWordPress' Chrome Extension from the [Chrome Web Store](https://chrome.google.com/webstore/detail/is-wp-detects-wordpress-t/enohbojoeceihccbalgijnfbhbinfllf).
+1. **Installation:** Install the 'IsWordPress' Chrome Extension from the [Chrome Web Store](https://chrome.google.com/webstore/detail/enohbojoeceihccbalgijnfbhbinfllf).
 
 2. **Integration:** Once installed, the extension will seamlessly integrate into your Chrome browser.
 
